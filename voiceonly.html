@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Only Voice - Ultimate Lyric Video Maker</title>
+    <title>Only Voice - Synchronized Lyric Maker</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -24,7 +24,7 @@
     <div class="w-full max-w-2xl glass-card rounded-2xl shadow-2xl p-6 md:p-8 space-y-6">
         <div class="text-center">
             <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500">🎬 Only Voice - Lyric Maker</h1>
-            <p class="text-xs text-gray-400 mt-1">কাস্টম ব্যাকগ্রাউন্ড ভিডিও ও ব্র্যান্ডিংসহ লিরিক ভিডিও তৈরি করুন!</p>
+            <p class="text-xs text-gray-400 mt-1">নিখুঁত টাইম সিঙ্ক ও কাস্টম ব্যাকগ্রাউন্ডসহ লিরিক ভিডিও তৈরি করুন!</p>
         </div>
 
         <!-- Branding Settings -->
@@ -39,7 +39,7 @@
             </div>
         </div>
 
-        <!-- Step 1: Audio & Background Theme Selection -->
+        <!-- Step 1: Audio & Background Selection -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-xs font-semibold text-gray-300 mb-2">অডিও ফাইল (Vocal MP3):</label>
@@ -48,38 +48,48 @@
             <div>
                 <label class="block text-xs font-semibold text-gray-300 mb-2">ব্যাকগ্রাউন্ড ডিজাইন:</label>
                 <select id="bgTheme" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-purple-500">
-                    <option value="gradient1">রয়্যাল পার্পল গ্রেডিয়েন্ট (ডিজাইন ১)</option>
-                    <option value="starry">তারাভরা রাত ও পার্টিকলস (ডিজাইন ২)</option>
-                    <option value="sunset">ইমোশনাল সানসেট (ডিজাইন ৩)</option>
-                    <option value="custom">🎥 কাস্টম ভিডিও ব্যাকগ্রাউন্ড (আপনার ভিডিও আপলোড)</option>
+                    <option value="gradient1">রয়্যাল পার্পল গ্রেডিয়েন্ট</option>
+                    <option value="starry">তারাভরা রাত ও পার্টিকলস</option>
+                    <option value="sunset">ইমোশনাল সানসেট</option>
+                    <option value="custom">🎥 কাস্টম ভিডিও ব্যাকগ্রাউন্ড</option>
                 </select>
             </div>
         </div>
 
-        <!-- Custom Video Upload Box (Hidden by default, shown if custom selected) -->
+        <!-- Custom Video Upload Box -->
         <div id="customVideoSection" class="hidden bg-slate-900/50 p-4 rounded-xl border border-slate-800 space-y-3">
             <div>
-                <label class="block text-xs font-semibold text-purple-400 mb-2">আপনার পছন্দের ব্যাকগ্রাউন্ড ভিডিও আপলোড করুন (MP4):</label>
+                <label class="block text-xs font-semibold text-purple-400 mb-2">ব্যাকগ্রাউন্ড ভিডিও আপলোড করুন (MP4):</label>
                 <input type="file" id="customVideoFile" accept="video/*" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer">
             </div>
-            <!-- Auto Zoom Checkbox Option -->
             <div class="flex items-center space-x-2 pt-1">
                 <input type="checkbox" id="autoZoomCheck" class="w-4 h-4 text-purple-600 bg-slate-800 border-slate-700 rounded focus:ring-purple-500 cursor-pointer">
-                <label for="autoZoomCheck" class="text-xs text-gray-300 cursor-pointer">অটো জুম করুন (ভিডিওর কর্নারে থাকা আগের ওয়াটারমার্ক বা লেখা কেটে ফেলার জন্য)</label>
+                <label for="autoZoomCheck" class="text-xs text-gray-300 cursor-pointer">অটো জুম করুন (কোর্নারের লোগো/লেখা কাটার জন্য)</label>
             </div>
         </div>
 
         <!-- Step 2: Bengali Lyrics Input -->
         <div>
             <label class="block text-xs font-semibold text-gray-300 mb-2">বাংলা লিরিকস (প্রতি লাইনে একটি করে বাক্য লিখুন):</label>
-            <textarea id="lyricsInput" rows="4" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-purple-500" placeholder="যেমন:
+            <textarea id="lyricsInput" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-purple-500" placeholder="যেমন:
 চোখের জলে ভিজে গেছে মন...
-তুমি ছাড়া আজ বড় একা এই জীবন...
-সুরের মায়ায় হারিয়ে যেতে চাই..."></textarea>
+তুমি ছাড়া আজ বড় একা এই জীবন..."></textarea>
         </div>
 
-        <!-- Step 3: Live Preview Canvas -->
-        <div class="relative w-full aspect-[9/16] max-h-[350px] bg-black rounded-xl overflow-hidden flex flex-col items-center justify-center border border-slate-700 shadow-inner">
+        <!-- Step 3: Interactive Sync Control Box -->
+        <div class="bg-slate-900/80 p-4 rounded-xl border border-purple-500/40 text-center space-y-3">
+            <h3 class="text-xs font-semibold text-purple-300">🎙️ লিরিক টাইম সিঙ্ক (টাইমিং মেলানোর উপায়):</h3>
+            <p id="syncStatusText" class="text-xs text-gray-400">প্রথমে অডিও ও লিরিক দিয়ে নিচের 'সিঙ্ক শুরু করুন' বাটনে ক্লিক করুন।</p>
+            <button id="startSyncBtn" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 rounded-xl transition shadow-md text-xs disabled:opacity-50" disabled>
+                ⏱️ লিরিক সিঙ্ক শুরু করুন (ট্যাপ করে টাইম সেট করুন)
+            </button>
+            <button id="tapLineBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition shadow-lg text-sm hidden">
+                👉 গান বাজার সময় এই লাইনে ট্যাপ করুন (পরবর্তী লাইন)
+            </button>
+        </div>
+
+        <!-- Step 4: Live Preview Canvas -->
+        <div class="relative w-full aspect-[9/16] max-h-[320px] bg-black rounded-xl overflow-hidden flex flex-col items-center justify-center border border-slate-700 shadow-inner">
             <canvas id="videoCanvas" width="720" height="1280" class="w-full h-full object-contain"></canvas>
             <div id="previewOverlay" class="absolute inset-0 flex items-center justify-center p-6 text-center pointer-events-none">
                 <p id="lyricDisplay" class="text-xl md:text-2xl font-bold text-white drop-shadow-lg leading-relaxed">এখানে আপনার লিরিকস ভেসে উঠবে...</p>
@@ -88,7 +98,7 @@
 
         <!-- Controls & Record Button -->
         <div class="flex flex-col sm:flex-row gap-3">
-            <button id="playPreviewBtn" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-xl transition shadow-lg text-sm">
+            <button id="playPreviewBtn" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-xl transition shadow-lg text-sm disabled:opacity-50" disabled>
                 ▶ প্রিভিউ দেখুন ও শুনুন
             </button>
             <button id="recordBtn" class="flex-1 bg-pink-600 hover:bg-pink-700 text-white font-semibold py-3 rounded-xl transition shadow-lg text-sm disabled:opacity-50" disabled>
@@ -103,6 +113,9 @@
         const lyricsInput = document.getElementById('lyricsInput');
         const playPreviewBtn = document.getElementById('playPreviewBtn');
         const recordBtn = document.getElementById('recordBtn');
+        const startSyncBtn = document.getElementById('startSyncBtn');
+        const tapLineBtn = document.getElementById('tapLineBtn');
+        const syncStatusText = document.getElementById('syncStatusText');
         const lyricDisplay = document.getElementById('lyricDisplay');
         const canvas = document.getElementById('videoCanvas');
         const ctx = canvas.getContext('2d');
@@ -118,11 +131,12 @@
         customVideoElement.loop = true;
         customVideoElement.muted = true;
         let lines = [];
+        let lineTimestamps = [];
+        let currentSyncIndex = 0;
         let animationId = null;
         let logoImg = null;
         let stars = [];
 
-        // Generate random stars for design 2
         for(let i=0; i<50; i++) {
             stars.push({
                 x: Math.random() * 720,
@@ -166,31 +180,85 @@
             if (file) {
                 if (audioElement) audioElement.pause();
                 audioElement = new Audio(URL.createObjectURL(file));
+                audioElement.onloadedmetadata = () => {
+                    startSyncBtn.removeAttribute('disabled');
+                    syncStatusText.textContent = 'অডিও লোড হয়েছে। এখন লিরিক সিঙ্ক করুন।';
+                };
+            }
+        });
+
+        // --- Tap-to-Sync Feature Logic ---
+        startSyncBtn.addEventListener('click', () => {
+            const text = lyricsInput.value.trim();
+            if (!text) {
+                alert('দয়া করে প্রথমে লিরিকস লিখুন!');
+                return;
+            }
+            lines = text.split('\n').filter(l => l.trim() !== '');
+            lineTimestamps = [];
+            currentSyncIndex = 0;
+
+            audioElement.currentTime = 0;
+            audioElement.play();
+            if (bgTheme.value === 'custom') {
+                customVideoElement.currentTime = 0;
+                customVideoElement.play();
+            }
+
+            startSyncBtn.classList.add('hidden');
+            tapLineBtn.classList.remove('hidden');
+            syncStatusText.innerHTML = `সঠিক সময়ে ট্যাপ করুন: <strong class="text-pink-400">"${lines[0]}"</strong>`;
+            tapLineBtn.textContent = `১ম লাইনের সময় মার্ক করতে ট্যাপ করুন`;
+        });
+
+        tapLineBtn.addEventListener('click', () => {
+            let t = audioElement.currentTime;
+            lineTimestamps.push(t);
+            currentSyncIndex++;
+
+            if (currentSyncIndex < lines.length) {
+                syncStatusText.innerHTML = `পরবর্তী লাইন: <strong class="text-pink-400">"${lines[currentSyncIndex]}"</strong>`;
+                tapLineBtn.textContent = `পরবর্তী লাইনের জন্য ট্যাপ করুন (${currentSyncIndex + 1}/${lines.length})`;
+            } else {
+                // Sync complete
+                audioElement.pause();
+                if (bgTheme.value === 'custom') customVideoElement.pause();
+                tapLineBtn.classList.add('hidden');
+                startSyncBtn.classList.remove('hidden');
+                startSyncBtn.textContent = '✅ সিঙ্ক সম্পন্ন! পুনরায় সিঙ্ক করুন';
+                syncStatusText.textContent = 'সকল লিরিকের টাইম সফলভাবে সেট হয়েছে!';
+                playPreviewBtn.removeAttribute('disabled');
                 recordBtn.removeAttribute('disabled');
             }
         });
 
+        function getActiveLyric(currentTime) {
+            if (lineTimestamps.length === 0) return lines[0] || '';
+            let activeIdx = 0;
+            for (let i = 0; i < lineTimestamps.length; i++) {
+                if (currentTime >= lineTimestamps[i]) {
+                    activeIdx = i;
+                }
+            }
+            return lines[activeIdx] || '';
+        }
+
         function drawCanvasContent(theme, progress, currentText) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // 1. Draw Background based on Theme Selection
             if (theme === 'custom' && customVideoElement.readyState >= 2) {
                 ctx.save();
-                // If Auto Zoom checkbox is checked, apply a slight scale (zoom-in) from center
                 if (autoZoomCheck.checked) {
-                    let scale = 1.15; // 15% zoom to crop outer watermarks
+                    let scale = 1.15;
                     ctx.translate(canvas.width / 2, canvas.height / 2);
                     ctx.scale(scale, scale);
                     ctx.translate(-canvas.width / 2, -canvas.height / 2);
                 }
                 ctx.drawImage(customVideoElement, 0, 0, canvas.width, canvas.height);
                 ctx.restore();
-
-                // Dark overlay to make text clearly readable over video
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             } else if (theme === 'starry') {
-                // Starry Night Theme
                 ctx.fillStyle = '#09090b';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.fillStyle = '#ffffff';
@@ -202,7 +270,6 @@
                 });
                 ctx.globalAlpha = 1.0;
             } else {
-                // Gradient Themes
                 let grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
                 if (theme === 'gradient1') {
                     grad.addColorStop(0, '#3b0764');
@@ -214,14 +281,13 @@
                 ctx.fillStyle = grad;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Glowing Orb effect
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
                 ctx.beginPath();
                 ctx.arc(canvas.width / 2, canvas.height / 2, 350 + Math.sin(progress) * 40, 0, Math.PI * 2);
                 ctx.fill();
             }
 
-            // 2. Draw Branding / Watermark (Top-Left Corner)
+            // Branding Watermark
             const padding = 40;
             const pageName = pageNameInput.value || 'Only Voice';
             
@@ -261,7 +327,7 @@
             ctx.fillText(pageName, pillX + 65, pillY + 31);
             ctx.restore();
 
-            // 3. Draw Lyrics in Center
+            // Draw Lyrics
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 45px sans-serif';
             ctx.textAlign = 'center';
@@ -270,26 +336,14 @@
         }
 
         playPreviewBtn.addEventListener('click', () => {
-            if (!audioElement) {
-                alert('দয়া করে প্রথমে একটি অডিও ফাইল সিলেক্ট করুন!');
-                return;
-            }
-            const text = lyricsInput.value.trim();
-            if (!text) {
-                alert('দয়া করে কিছু লিরিকস লিখুন!');
-                return;
-            }
+            if (!audioElement) return;
 
-            lines = text.split('\n').filter(l => l.trim() !== '');
             audioElement.currentTime = 0;
             audioElement.play();
-
             if (bgTheme.value === 'custom') {
                 customVideoElement.currentTime = 0;
                 customVideoElement.play();
             }
-
-            let durationPerLine = (audioElement.duration || 10) / lines.length;
 
             function updateCanvas() {
                 if (audioElement.ended) {
@@ -300,8 +354,7 @@
                 }
 
                 let currentTime = audioElement.currentTime;
-                let currentIndex = Math.floor(currentTime / durationPerLine);
-                let currentText = lines[currentIndex] || lines[lines.length - 1] || '';
+                let currentText = getActiveLyric(currentTime);
 
                 lyricDisplay.textContent = currentText;
                 drawCanvasContent(bgTheme.value, currentTime, currentText);
@@ -313,23 +366,15 @@
             updateCanvas();
         });
 
-        // Video Recording & Downloading Feature
+        // Video Recording & Download
         let mediaRecorder;
         let recordedChunks = [];
 
         recordBtn.addEventListener('click', () => {
             if (!audioElement) return;
 
-            const text = lyricsInput.value.trim();
-            if (!text) {
-                alert('দয়া করে লিরিকস দিন!');
-                return;
-            }
-
-            lines = text.split('\n').filter(l => l.trim() !== '');
             audioElement.currentTime = 0;
             audioElement.play();
-
             if (bgTheme.value === 'custom') {
                 customVideoElement.currentTime = 0;
                 customVideoElement.play();
@@ -359,7 +404,7 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'only-voice-video.webm';
+                a.download = 'only-voice-synced-video.webm';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -371,8 +416,6 @@
             recordBtn.textContent = '⏳ ভিডিও রেকর্ড হচ্ছে... (শেষ পর্যন্ত অপেক্ষা করুন)';
             recordBtn.setAttribute('disabled', 'true');
 
-            let durationPerLine = (audioElement.duration || 10) / lines.length;
-
             function recordLoop() {
                 if (audioElement.ended) {
                     audioElement.pause();
@@ -383,41 +426,6 @@
                 }
 
                 let currentTime = audioElement.currentTime;
-                let currentIndex = Math.floor(currentTime / durationPerLine);
-                let currentText = lines[currentIndex] || lines[lines.length - 1] || '';
+                let currentText = getActiveLyric(currentTime);
 
-                lyricDisplay.textContent = currentText;
-                drawCanvasContent(bgTheme.value, currentTime, currentText);
-
-                animationId = requestAnimationFrame(recordLoop);
-            }
-
-            recordLoop();
-        });
-
-        function wrapText(context, text, x, y, maxWidth, lineHeight) {
-            let words = text.split(' ');
-            let line = '';
-            let linesArray = [];
-
-            for(let n = 0; n < words.length; n++) {
-                let testLine = line + words[n] + ' ';
-                let metrics = context.measureText(testLine);
-                let testWidth = metrics.width;
-                if (testWidth > maxWidth && n > 0) {
-                    linesArray.push(line);
-                    line = words[n] + ' ';
-                } else {
-                    line = testLine;
-                }
-            }
-            linesArray.push(line);
-
-            let startY = y - ((linesArray.length - 1) * lineHeight) / 2;
-            for(let k = 0; k < linesArray.length; k++) {
-                context.fillText(linesArray[k], x, startY + (k * lineHeight));
-            }
-        }
-    </script>
-</body>
-</html>
+                lyricDisplay.textContent = curr
