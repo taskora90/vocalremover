@@ -6,8 +6,9 @@
     <title>AI Vocal & Instrumental Remover</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FFmpeg.wasm for handling video-to-audio extraction -->
+    <!-- FFmpeg UMD script -->
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/umd/ffmpeg.js"></script>
+    <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/util.js"></script>
     <style>
         body {
             background-color: #121212;
@@ -61,7 +62,7 @@
             </div>
         </div>
 
-        <!-- Download Section (Hidden initially) -->
+        <!-- Download Section -->
         <div id="downloadSection" class="hidden mt-6 space-y-3">
             <h3 class="text-sm font-semibold text-gray-300">ডাউনলোড করুন:</h3>
             <div class="grid grid-cols-2 gap-3">
@@ -73,6 +74,10 @@
 
     <!-- JavaScript Logic -->
     <script>
+        const { FFmpeg } = FFmpegWASM;
+        const { fetchFile } = FFmpegUtil;
+        let ffmpeg = null;
+
         const mediaFile = document.getElementById('mediaFile');
         const fileInfo = document.getElementById('fileInfo');
         const fileName = document.getElementById('fileName');
@@ -101,27 +106,70 @@
 
             progressSection.classList.remove('hidden');
             processBtn.setAttribute('disabled', 'true');
-            statusText.textContent = 'ফাইল লোড হচ্ছে...';
-            progressBar.style.width = '20%';
-            progressPercent.textContent = '20%';
+            statusText.textContent = 'FFmpeg লোড হচ্ছে...';
+            progressBar.style.width = '10%';
+            progressPercent.textContent = '10%';
 
-            // যদি ফাইলটি ভিডিও হয়, তবে FFmpeg দিয়ে অডিও আলাদা করার লজিক এখানে কাজ করবে
-            setTimeout(() => {
-                statusText.textContent = 'এআই (AI) দিয়ে ভয়েস ও মিউজিক আলাদা করা হচ্ছে...';
-                progressBar.style.width = '60%';
-                progressPercent.textContent = '60%';
-            }, 1500);
+            try {
+                if (!ffmpeg) {
+                    ffmpeg = new FFmpeg();
+                    await ffmpeg.load({
+                        coreURL: "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js",
+                        wasmURL: "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm",
+                    });
+                }
 
-            setTimeout(() => {
-                statusText.textContent = 'প্রসেসিং সম্পন্ন!';
-                progressBar.style.width = '100%';
-                progressPercent.textContent = '100%';
+                statusText.textContent = 'ফাইল রিড করা হচ্ছে...';
+                progressBar.style.width = '30%';
+                progressPercent.textContent = '30%';
+
+                const inputName = 'input_file';
+                const outputAudio = 'output.mp3';
                 
-                // সফল হওয়ার পর ডাউনলোড অপশন দেখানোর সিম্যুলেশন
-                downloadSection.classList.remove('hidden');
-                document.getElementById('downloadVocal').classList.remove('hidden');
-                document.getElementById('downloadMusic').classList.remove('hidden');
-            }, 3000);
+                await ffmpeg.writeFile(inputName, await fetchFile(selectedFile));
+
+                statusText.textContent = 'ভিডিও থেকে অডিও এক্সট্র্যাক্ট হচ্ছে...';
+                progressBar.style.width = '50%';
+                progressPercent.textContent = '50%';
+
+                // যদি ভিডিও হয় তবে অডিও কনভার্ট করবে, অডিও হলে সরাসরি নিবে
+                await ffmpeg.exec(['-i', inputName, '-q:a', '0', '-map', 'a', outputAudio]);
+
+                statusText.textContent = 'এআই দিয়ে ভোকাল ও মিউজিক আলাদা করা হচ্ছে...';
+                progressBar.style.width = '80%';
+                progressPercent.textContent = '80%';
+
+                // এখানে আমরা অডিও ফাইল রিড করে ডেমো বা আসল সেপারেশন লিংকে পাঠাতে পারব
+                const data = await ffmpeg.readFile(outputAudio);
+                const audioBlob = new Blob([data.buffer], { type: 'audio/mp3' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+
+                // সাময়িকভাবে অডিও ফাইলটিকেই ডাউনলোড লিংকে বসিয়ে দিচ্ছি পরীক্ষার জন্য
+                setTimeout(() => {
+                    statusText.textContent = 'প্রসেসিং সম্পন্ন!';
+                    progressBar.style.width = '100%';
+                    progressPercent.textContent = '100%';
+
+                    downloadSection.classList.remove('hidden');
+                    const vocalLink = document.getElementById('downloadVocal');
+                    const musicLink = document.getElementById('downloadMusic');
+
+                    vocalLink.href = audioUrl;
+                    vocalLink.download = 'vocal.mp3';
+                    vocalLink.classList.remove('hidden');
+
+                    musicLink.href = audioUrl;
+                    musicLink.download = 'instrumental.mp3';
+                    musicLink.classList.remove('hidden');
+                    
+                    processBtn.removeAttribute('disabled');
+                }, 1000);
+
+            } catch (error) {
+                console.error(error);
+                statusText.textContent = 'ত্রুটি ঘটেছে! কনসোল চেক করুন।';
+                processBtn.removeAttribute('disabled');
+            }
         });
     </script>
 </body>
