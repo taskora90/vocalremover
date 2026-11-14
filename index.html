@@ -6,7 +6,7 @@
     <title>AI Vocal & Instrumental Remover</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FFmpeg v0.11.6 UMD Script (GitHub Pages Friendly) -->
+    <!-- FFmpeg v0.11.6 UMD Script -->
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <style>
         body {
@@ -106,13 +106,16 @@
 
             progressSection.classList.remove('hidden');
             processBtn.setAttribute('disabled', 'true');
-            statusText.textContent = 'FFmpeg লোড হচ্ছে...';
-            progressBar.style.width = '10% ';
+            statusText.textContent = 'FFmpeg লোড হচ্ছে... (প্রথমবার একটু সময় নিতে পারে)';
+            progressBar.style.width = '10%';
             progressPercent.textContent = '10%';
 
             try {
                 if (!ffmpeg) {
-                    ffmpeg = createFFmpeg({ log: true });
+                    ffmpeg = createFFmpeg({
+                        coreURL: "https://unpkg.com/@ffmpeg/core@0.11.0/dist/umd/ffmpeg-core.js",
+                        log: true
+                    });
                 }
 
                 if (!ffmpeg.isLoaded()) {
@@ -156,14 +159,13 @@
 
                 musicLink.href = audioUrl;
                 musicLink.download = 'instrumental.mp3';
-                musicLink.classList.Names ? null : musicLink.classList.remove('hidden');
                 musicLink.classList.remove('hidden');
 
                 processBtn.removeAttribute('disabled');
 
             } catch (error) {
                 console.error(error);
-                statusText.textContent = 'ত্রুটি ঘটেছে! কনসোল চেক করুন।';
+                statusText.textContent = 'ত্রুটি ঘটেছে! ভালো ইন্টারনেট কানেকশন দিয়ে আবার চেষ্টা করুন।';
                 processBtn.removeAttribute('disabled');
             }
         });
