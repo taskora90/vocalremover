@@ -26,15 +26,15 @@
         <h1 class="text-2xl font-bold text-center mb-2 text-white">🎵 Vocal & Video Splitter</h1>
         <p class="text-xs text-center text-gray-400 mb-6">ভিডিও বা অডিও থেকে ভয়েস ও মিউজিক আলাদা করুন কোনো লিমিট ছাড়াই!</p>
 
-        <!-- File Upload Box -->
-        <div class="border-2 border-dashed border-gray-600 rounded-xl p-6 text-center hover:border-gray-400 transition cursor-pointer relative mb-6">
-            <input type="file" id="mediaFile" accept="audio/*,video/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
-            <div class="space-y-2">
+        <!-- File Upload Box (Direct Touch Overlay for Mobile) -->
+        <div class="border-2 border-dashed border-gray-600 rounded-xl p-6 text-center relative mb-6 bg-gray-900/50 hover:border-blue-400 transition">
+            <input type="file" id="mediaFile" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-20">
+            <div class="space-y-2 pointer-events-none relative z-10">
                 <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                     <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
                 <div class="text-sm text-gray-300">
-                    <span class="font-semibold text-blue-400">ফাইল সিলেক্ট করুন</span> অথবা এখানে ড্রপ করুন
+                    <span class="font-semibold text-blue-400">ফাইল সিলেক্ট করুন</span> অথবা এখানে ট্যাপ করুন
                 </div>
                 <p class="text-xs text-gray-500">MP3, WAV, MP4, MKV সমর্থিত</p>
             </div>
@@ -42,7 +42,7 @@
 
         <!-- Selected File Info -->
         <div id="fileInfo" class="hidden mb-6 p-3 bg-gray-800 rounded-lg text-sm text-gray-300 flex justify-between items-center">
-            <span id="fileName" class="truncate max-w-[250px]"></span>
+            <span id="fileName" class="truncate max-w-[220px]"></span>
             <span id="fileType" class="text-xs bg-blue-600 px-2 py-1 rounded text-white"></span>
         </div>
 
@@ -92,10 +92,10 @@
         let selectedFile = null;
 
         mediaFile.addEventListener('change', (e) => {
-            selectedFile = e.target.files[0];
-            if (selectedFile) {
+            if (e.target.files && e.target.files.length > 0) {
+                selectedFile = e.target.files[0];
                 fileName.textContent = selectedFile.name;
-                fileType.textContent = selectedFile.type.includes('video') ? 'ভিডিও ফাইল' : 'অডিও ফাইল';
+                fileType.textContent = selectedFile.type && selectedFile.type.includes('video') ? 'ভিডিও ফাইল' : 'অডিও ফাইল';
                 fileInfo.classList.remove('hidden');
                 processBtn.removeAttribute('disabled');
             }
@@ -125,26 +125,23 @@
 
                 const inputName = 'input_file';
                 const outputAudio = 'output.mp3';
-                
+
                 await ffmpeg.writeFile(inputName, await fetchFile(selectedFile));
 
                 statusText.textContent = 'ভিডিও থেকে অডিও এক্সট্র্যাক্ট হচ্ছে...';
                 progressBar.style.width = '50%';
                 progressPercent.textContent = '50%';
 
-                // যদি ভিডিও হয় তবে অডিও কনভার্ট করবে, অডিও হলে সরাসরি নিবে
                 await ffmpeg.exec(['-i', inputName, '-q:a', '0', '-map', 'a', outputAudio]);
 
-                statusText.textContent = 'এআই দিয়ে ভোকাল ও মিউজিক আলাদা করা হচ্ছে...';
+                statusText.textContent = 'প্রসেসিং সম্পন্ন হচ্ছে...';
                 progressBar.style.width = '80%';
                 progressPercent.textContent = '80%';
 
-                // এখানে আমরা অডিও ফাইল রিড করে ডেমো বা আসল সেপারেশন লিংকে পাঠাতে পারব
                 const data = await ffmpeg.readFile(outputAudio);
                 const audioBlob = new Blob([data.buffer], { type: 'audio/mp3' });
                 const audioUrl = URL.createObjectURL(audioBlob);
 
-                // সাময়িকভাবে অডিও ফাইলটিকেই ডাউনলোড লিংকে বসিয়ে দিচ্ছি পরীক্ষার জন্য
                 setTimeout(() => {
                     statusText.textContent = 'প্রসেসিং সম্পন্ন!';
                     progressBar.style.width = '100%';
@@ -161,7 +158,7 @@
                     musicLink.href = audioUrl;
                     musicLink.download = 'instrumental.mp3';
                     musicLink.classList.remove('hidden');
-                    
+
                     processBtn.removeAttribute('disabled');
                 }, 1000);
 
