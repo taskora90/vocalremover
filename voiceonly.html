@@ -106,7 +106,6 @@
             </button>
         </div>
     </div>
-
     <!-- JavaScript Logic -->
     <script>
         const audioFile = document.getElementById('audioFile');
@@ -220,7 +219,6 @@
                 syncStatusText.innerHTML = `পরবর্তী লাইন: <strong class="text-pink-400">"${lines[currentSyncIndex]}"</strong>`;
                 tapLineBtn.textContent = `পরবর্তী লাইনের জন্য ট্যাপ করুন (${currentSyncIndex + 1}/${lines.length})`;
             } else {
-                // Sync complete
                 audioElement.pause();
                 if (bgTheme.value === 'custom') customVideoElement.pause();
                 tapLineBtn.classList.add('hidden');
@@ -241,6 +239,31 @@
                 }
             }
             return lines[activeIdx] || '';
+        }
+
+        // Helper function for text wrapping on canvas
+        function wrapText(context, text, x, y, maxWidth, lineHeight) {
+            let words = text.split(' ');
+            let line = '';
+            let linesArray = [];
+
+            for(let n = 0; n < words.length; n++) {
+                let testLine = line + words[n] + ' ';
+                let metrics = context.measureText(testLine);
+                let testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    linesArray.push(line);
+                    line = words[n] + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            linesArray.push(line);
+
+            let startY = y - ((linesArray.length - 1) * lineHeight) / 2;
+            for(let k = 0; k < linesArray.length; k++) {
+                context.fillText(linesArray[k], x, startY + (k * lineHeight));
+            }
         }
 
         function drawCanvasContent(theme, progress, currentText) {
@@ -290,7 +313,7 @@
             // Branding Watermark
             const padding = 40;
             const pageName = pageNameInput.value || 'Only Voice';
-            
+
             ctx.save();
             ctx.font = 'bold 28px sans-serif';
             let textWidth = ctx.measureText(pageName).width;
@@ -428,4 +451,14 @@
                 let currentTime = audioElement.currentTime;
                 let currentText = getActiveLyric(currentTime);
 
-                lyricDisplay.textContent = curr
+                lyricDisplay.textContent = currentText;
+                drawCanvasContent(bgTheme.value, currentTime, currentText);
+
+                animationId = requestAnimationFrame(recordLoop);
+            }
+
+            recordLoop();
+        });
+    </script>
+</body>
+</html>
