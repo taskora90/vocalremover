@@ -6,9 +6,8 @@
     <title>AI Vocal & Instrumental Remover</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FFmpeg UMD script -->
-    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/umd/ffmpeg.js"></script>
-    <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/util.js"></script>
+    <!-- FFmpeg v0.11.6 UMD Script (GitHub Pages Friendly) -->
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <style>
         body {
             background-color: #121212;
@@ -74,6 +73,7 @@
 
     <!-- JavaScript Logic -->
     <script>
+        const { createFFmpeg, fetchFile } = FFmpeg;
         let ffmpeg = null;
 
         const mediaFile = document.getElementById('mediaFile');
@@ -107,24 +107,16 @@
             progressSection.classList.remove('hidden');
             processBtn.setAttribute('disabled', 'true');
             statusText.textContent = 'FFmpeg লোড হচ্ছে...';
-            progressBar.style.width = '10%';
+            progressBar.style.width = '10% ';
             progressPercent.textContent = '10%';
 
             try {
-                // সেফলি উইন্ডো অবজেক্ট থেকে FFmpeg এবং fetchFile রিকভার করা
-                const { FFmpeg } = window.FFmpegWASM || {};
-                const { fetchFile } = window.FFmpegUtil || {};
-
-                if (!FFmpeg || !fetchFile) {
-                    throw new Error("FFmpeg লাইব্রেরি লোড হতে ব্যর্থ হয়েছে। ইন্টারনেট কানেকশন চেক করুন।");
+                if (!ffmpeg) {
+                    ffmpeg = createFFmpeg({ log: true });
                 }
 
-                if (!ffmpeg) {
-                    ffmpeg = new FFmpeg();
-                    await ffmpeg.load({
-                        coreURL: "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js",
-                        wasmURL: "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm",
-                    });
+                if (!ffmpeg.isLoaded()) {
+                    await ffmpeg.load();
                 }
 
                 statusText.textContent = 'ফাইল রিড করা হচ্ছে...';
@@ -134,41 +126,40 @@
                 const inputName = 'input_file';
                 const outputAudio = 'output.mp3';
 
-                await ffmpeg.writeFile(inputName, await fetchFile(selectedFile));
+                ffmpeg.FS('writeFile', inputName, await fetchFile(selectedFile));
 
                 statusText.textContent = 'ভিডিও থেকে অডিও এক্সট্র্যাক্ট হচ্ছে...';
                 progressBar.style.width = '50%';
                 progressPercent.textContent = '50%';
 
-                await ffmpeg.exec(['-i', inputName, '-q:a', '0', '-map', 'a', outputAudio]);
+                await ffmpeg.run('-i', inputName, '-q:a', '0', '-map', 'a', outputAudio);
 
                 statusText.textContent = 'প্রসেসিং সম্পন্ন হচ্ছে...';
                 progressBar.style.width = '80%';
                 progressPercent.textContent = '80%';
 
-                const data = await ffmpeg.readFile(outputAudio);
+                const data = ffmpeg.FS('readFile', outputAudio);
                 const audioBlob = new Blob([data.buffer], { type: 'audio/mp3' });
                 const audioUrl = URL.createObjectURL(audioBlob);
 
-                setTimeout(() => {
-                    statusText.textContent = 'প্রসেসিং সম্পন্ন!';
-                    progressBar.style.width = '100%';
-                    progressPercent.textContent = '100%';
+                statusText.textContent = 'প্রসেসিং সম্পন্ন!';
+                progressBar.style.width = '100%';
+                progressPercent.textContent = '100%';
 
-                    downloadSection.classList.remove('hidden');
-                    const vocalLink = document.getElementById('downloadVocal');
-                    const musicLink = document.getElementById('downloadMusic');
+                downloadSection.classList.remove('hidden');
+                const vocalLink = document.getElementById('downloadVocal');
+                const musicLink = document.getElementById('downloadMusic');
 
-                    vocalLink.href = audioUrl;
-                    vocalLink.download = 'vocal.mp3';
-                    vocalLink.classList.remove('hidden');
+                vocalLink.href = audioUrl;
+                vocalLink.download = 'vocal.mp3';
+                vocalLink.classList.remove('hidden');
 
-                    musicLink.href = audioUrl;
-                    musicLink.download = 'instrumental.mp3';
-                    musicLink.classList.remove('hidden');
+                musicLink.href = audioUrl;
+                musicLink.download = 'instrumental.mp3';
+                musicLink.classList.Names ? null : musicLink.classList.remove('hidden');
+                musicLink.classList.remove('hidden');
 
-                    processBtn.removeAttribute('disabled');
-                }, 1000);
+                processBtn.removeAttribute('disabled');
 
             } catch (error) {
                 console.error(error);
