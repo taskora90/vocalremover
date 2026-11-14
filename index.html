@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Vocal & Instrumental Remover</title>
+    <!-- Tailwind CSS CDN for fast & modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        .card-bg {
+            background-color: #1e1e1e;
+            border: 1px solid #2d2d2d;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="w-full max-w-md card-bg rounded-2xl shadow-2xl p-6 md:p-8">
+        <h1 class="text-2xl font-bold text-center mb-2 text-white">🎵 Vocal & Video Splitter</h1>
+        <p class="text-xs text-center text-gray-400 mb-6">আপনার ভিডিও বা অডিও থেকে ভয়েস ও মিউজিক আলাদা করুন সম্পূর্ণ ফ্রিতে!</p>
+
+        <!-- File Upload Box -->
+        <div class="border-2 border-dashed border-gray-600 rounded-xl p-6 text-center hover:border-gray-400 transition cursor-pointer relative mb-6">
+            <input type="file" id="mediaFile" accept="audio/*,video/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+            <div class="space-y-2">
+                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <div class="text-sm text-gray-300">
+                    <span class="font-semibold text-blue-400">ফাইল সিলেক্ট করুন</span> অথবা এখানে ড্রপ করুন
+                </div>
+                <p class="text-xs text-gray-500">MP3, WAV, MP4, MKV (যেকোনো সাইজ)</p>
+            </div>
+        </div>
+
+        <!-- Selected File Info -->
+        <div id="fileInfo" class="hidden mb-6 p-3 bg-gray-800 rounded-lg text-sm text-gray-300 flex justify-between items-center">
+            <span id="fileName" class="truncate max-w-[250px]"></span>
+            <span id="fileType" class="text-xs bg-blue-600 px-2 py-1 rounded text-white"></span>
+        </div>
+
+        <!-- Process Button -->
+        <button id="processBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition shadow-lg disabled:opacity-50" disabled>
+            প্রসেস শুরু করুন (Separate)
+        </button>
+
+        <!-- Progress Section (Hidden initially) -->
+        <div id="progressSection" class="hidden mt-6 space-y-2">
+            <div class="flex justify-between text-xs text-gray-400">
+                <span id="statusText">ফাইল প্রসেসিং হচ্ছে...</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
+                <div id="progressBar" class="bg-blue-500 h-full w-0 transition-all duration-300"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for Basic UI Interactions -->
+    <script>
+        const mediaFile = document.getElementById('mediaFile');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileType = document.getElementById('fileType');
+        const processBtn = document.getElementById('processBtn');
+
+        mediaFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                fileName.textContent = file.name;
+                fileType.textContent = file.type.includes('video') ? 'ভিডিও' : 'অডিও';
+                fileInfo.classList.remove('hidden');
+                processBtn.removeAttribute('disabled');
+            }
+        });
+
+        processBtn.addEventListener('click', () => {
+            document.getElementById('progressSection').classList.remove('hidden');
+            processBtn.setAttribute('disabled', 'true');
+            
+            // সিম্যুলেশন প্রোগ্রেস (পরবর্তীতে আমরা এখানে মূল AI ও FFmpeg লজিক যুক্ত করব)
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                document.getElementById('progressBar').style.width = progress + '%';
+                document.getElementById('progressPercent').textContent = progress + '%';
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    document.getElementById('statusText').textContent = 'প্রসেসিং সম্পন্ন!';
+                }
+            }, 300);
+        });
+    </script>
+</body>
+</html>
