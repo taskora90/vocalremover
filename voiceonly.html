@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Only Voice - Lyric Video Maker with Branding</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'SolaimanLipi', sans-serif;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="w-full max-w-2xl glass-card rounded-2xl shadow-2xl p-6 md:p-8 space-y-6">
+        <div class="text-center">
+            <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500">🎬 Only Voice - Lyric Maker</h1>
+            <p class="text-xs text-gray-400 mt-1">অটো ব্র‍্যান্ডিং লোগো ও নামসহ লিরিক ভিডিও তৈরি করুন রিলস ও টিকটকের জন্য!</p>
+        </div>
+
+        <!-- Branding Settings -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-1">পেজের নাম (Watermark Text):</label>
+                <input type="text" id="pageNameInput" value="Only Voice" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-purple-500">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-1">পেজের লোগো/আইকন (PNG/JPG):</label>
+                <input type="file" id="logoFile" accept="image/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-pink-600 file:text-white hover:file:bg-pink-700 cursor-pointer">
+            </div>
+        </div>
+
+        <!-- Step 1: Upload Audio & Background -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2">অডিও ফাইল (Vocal MP3):</label>
+                <input type="file" id="audioFile" accept="audio/*" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2">ব্যাকগ্রাউন্ড থিম:</label>
+                <select id="bgTheme" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-purple-500">
+                    <option value="gradient1">রয়্যাল পার্পল গ্রেডিয়েন্ট</option>
+                    <option value="darknight">ডার্ক স্টারি নাইট</option>
+                    <option value="sunset">ইমোশনাল সানসেট</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Step 2: Bengali Lyrics Input -->
+        <div>
+            <label class="block text-xs font-semibold text-gray-300 mb-2">বাংলা লিরিকস (প্রতি লাইনে একটি করে বাক্য লিখুন):</label>
+            <textarea id="lyricsInput" rows="4" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-purple-500" placeholder="যেমন:
+চোখের জলে ভিজে গেছে মন...
+তুমি ছাড়া আজ বড় একা এই জীবন...
+সুরের মায়ায় হারিয়ে যেতে চাই..."></textarea>
+        </div>
+
+        <!-- Step 3: Live Preview Canvas -->
+        <div class="relative w-full aspect-[9/16] max-h-[350px] bg-black rounded-xl overflow-hidden flex flex-col items-center justify-center border border-slate-700 shadow-inner">
+            <canvas id="videoCanvas" width="720" height="1280" class="w-full h-full object-contain"></canvas>
+            <div id="previewOverlay" class="absolute inset-0 flex items-center justify-center p-6 text-center pointer-events-none">
+                <p id="lyricDisplay" class="text-xl md:text-2xl font-bold text-white drop-shadow-lg leading-relaxed">এখানে আপনার লিরিকস ভেসে উঠবে...</p>
+            </div>
+        </div>
+
+        <!-- Controls & Record Button -->
+        <div class="flex flex-col sm:flex-row gap-3">
+            <button id="playPreviewBtn" class="flex-1 bg-purple-600 hover:bg-purple-700text-white font-semibold py-3 rounded-xl transition shadow-lg text-sm">
+                ▶ প্রিভিউ দেখুন ও শুনুন
+            </button>
+            <button id="recordBtn" class="flex-1 bg-pink-600 hover:bg-pink-700 text-white font-semibold py-3 rounded-xl transition shadow-lg text-sm disabled:opacity-50" disabled>
+                🔴 ভিডিও রেকর্ড ও ডাউনলোড করুন
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        const audioFile = document.getElementById('audioFile');
+        const lyricsInput = document.getElementById('lyricsInput');
+        const playPreviewBtn =EventListener = document.getElementById('playPreviewBtn');
+        const recordBtn = document.getElementById('recordBtn');
+        const lyricDisplay = document.getElementById('lyricDisplay');
+        const canvas = document.getElementById('videoCanvas');
+        const ctx = canvas.getContext('2d');
+        const bgTheme = document.getElementById('bgTheme');
+        const pageNameInput = document.getElementById('pageNameInput');
+        const logoFile = document.getElementById('logoFile');
+
+        let audioElement = null;
+        let lines = [];
+        let animationId = null;
+        let logoImg = null;
+
+        logoFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    logoImg = new Image();
+                    logoImg.src = event.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        audioFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                if (audioElement) audioElement.pause();
+                audioElement = new Audio(URL.createObjectURL(file));
+                recordBtn.removeAttribute('disabled');
+            }
+        });
+
+        function drawCanvasContent(theme, progress, currentText) {
+            // 1. Draw Background
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            
+            if (theme === 'gradient1') {
+                grad.addColorStop(0, '#3b0764');
+                grad.addColorStop(1, '#0f172a');
+            } else if (theme === 'darknight') {
+                grad.addColorStop(0, '#09090b');
+                grad.addColorStop(1, '#18181b');
+            } else {
+                grad.addColorStop(0, '#831843');
+                grad.addColorStop(1, '#311026');
+            }
+            
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Subtle glowing circle effect
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, 350 + Math.sin(progress) * 40, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 2. Draw Branding / Watermark (Top-Left or Top-Right Corner)
+            const padding = 40;
+            const pageName = pageNameInput.value || 'Only Voice';
+            
+            ctx.save();
+            // Let's create a nice semi-transparent pill container at top-left
+            ctx.font = 'bold 28px sans-serif';
+            let textWidth = ctx.measureText(pageName).width;
+            let pillWidth = textWidth + 80;
+            let pillHeight = 60;
+            let pillX = padding;
+            let pillY = padding;
+
+            // Background pill for branding
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.beginPath();
+            ctx.roundRect(pillX, pillY, pillWidth, pillHeight, 30);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Draw Logo Icon inside the pill if uploaded
+            if (logoImg && logoImg.complete) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(pillX + 30, pillY + 30, 20, 0, Math.PI * 2);
+                ctx.clip();
+                ctx.drawImage(logoImg, pillX + 10, pillY + 10, 40, 40);
+                ctx.restore();
+            } else {
+                // Default fallback icon/dot if no logo uploaded
+                ctx.fillStyle = '#ec4899';
+                ctx.beginPath();
+                ctx.arc(pillX + 30, pillY + 30, 12, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Draw Page Name Text
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(pageName, pillX + 65, pillY + 31);
+            ctx.restore();
+
+            // 3. Draw Lyrics in Center
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 45px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            wrapText(ctx, currentText, canvas.width / 2, canvas.height / 2, canvas.width - 120, 65);
+        }
+
+        playPreviewBtn.addEventListener('click', () => {
+            if (!audioElement) {
+                alert('দয়া করে প্রথমে একটি অডিও ফাইল সিলেক্ট করুন!');
+                return;
+            }
+            const text = lyricsInput.value.trim();
+            if (!text) {
+                alert('দয়া করে কিছু লিরিকস লিখুন!');
+                return;
+            }
+
+            lines = text.split('\n').filter(l => l.trim() !== '');
+            audioElement.currentTime = 0;
+            audioElement.play();
+
+            let durationPerLine = (audioElement.duration || 10) / lines.length;
+
+            function updateCanvas() {
+                if (audioElement.ended) {
+                    cancelAnimationFrame(animationId);
+                    playPreviewBtn.textContent = '▶ প্রিভিউ দেখুন ও শুনুন';
+                    return;
+                }
+
+                let currentTime = audioElement.currentTime;
+                let currentIndex = Math.floor(currentTime / durationPerLine);
+                let currentText = lines[currentIndex] || lines[lines.length - 1] || '';
+
+                lyricDisplay.textContent = currentText;
+
+                // Render everything on Canvas
+                drawCanvasContent(bgTheme.value, currentTime, currentText);
+
+                animationId = requestAnimationFrame(updateCanvas);
+            }
+
+            playPreviewBtn.textContent = '⏸ প্লে হচ্ছে...';
+            updateCanvas();
+        });
+
+        // Video Recording & Downloading Feature Logic
+        let mediaRecorder;
+        let recordedChunks = [];
+
+        recordBtn.addEventListener('click', () => {
+            if (!audioElement) return;
+
+            const text = lyricsInput.value.trim();
+            if (!text) {
+                alert('দয়া করে লিরিকস দিন!');
+                return;
+            }
+
+            lines = text.split('\n').filter(l => l.trim() !== '');
+            audioElement.currentTime = 0;
+            audioElement.play();
+
+            // Capture stream from canvas and audio stream from audio element
+            const canvasStream = canvas.captureStream(30); // 30 FPS
+            
+            // Combine audio stream with canvas stream
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioCtx.createMediaElementSource(audioElement);
+            const destination = audioCtx.createMediaStreamDestination();
+            source.connect(destination);
+            source.connect(audioCtx.destination); // so user can hear while recording
+
+            const combinedStream = new MediaStream([
+                ...canvasStream.getVideoTracks(),
+                ...destination.stream.getAudioTracks()
+            ]);
+
+            recordedChunks = [];
+            mediaRecorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm;codecs=vp9' });
+
+            mediaRecorder.ondataavailable = function(e) {
+                if (e.data.size > 0) {
+                    recordedChunks.push(e.data);
+                }
+            };
+
+            mediaRecorder.onstop = function() {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'only-voice-video.webm';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                recordBtn.textContent = '🔴 ভিডিও রেকর্ড ও ডাউনলোড করুন';
+                recordBtn.removeAttribute('disabled');
+            };
+
+            mediaRecorder.start();
+            recordBtn.textContent = '⏳ ভিডিও রেকর্ড হচ্ছে... (শেষ পর্যন্ত অপেক্ষা করুন)';
+            recordBtn.setAttribute('disabled', 'true');
+
+            let durationPerLine = (audioElement.duration || 10) / lines.length;
+
+            function recordLoop() {
+                if (audioElement.ended) {
+                    audioElement.pause();
+                    mediaRecorder.stop();
+                    cancelAnimationFrame(animationId);
+                    return;
+                }
+
+                let currentTime = audioElement.currentTime;
+                let currentIndex = Math.floor(currentTime / durationPerLine);
+                let currentText = lines[currentIndex] || lines[lines.length - 1] || '';
+
+                lyricDisplay.textContent = currentText;
+                drawCanvasContent(bgTheme.value, currentTime, currentText);
+
+                animationId = requestAnimationFrame(recordLoop);
+            }
+
+            recordLoop();
+        });
+
+        function wrapText(context, text, x, y, maxWidth, lineHeight) {
+            let words = text.split(' ');
+            let line = '';
+            let linesArray = [];
+
+            for(let n = 0; n < words.length; n++) {
+                let testLine = line + words[n] + ' ';
+                let metrics = context.measureText(testLine);
+                let testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    linesArray.push(line);
+                    line = words[n] + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            linesArray.push(line);
+
+            let startY = y - ((linesArray.length - 1) * lineHeight) / 2;
+            for(let k = 0; k < linesArray.length; k++) {
+                context.fillText(linesArray[k], x, startY + (k * lineHeight));
+            }
+        }
+    </script>
+</body>
+</html>
