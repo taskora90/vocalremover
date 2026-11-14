@@ -6,8 +6,8 @@
     <title>AI Vocal & Instrumental Remover</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FFmpeg v0.11.6 UMD Script -->
-    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+    <!-- FFmpeg v0.11.6 via jsDelivr (GitHub Pages & CORS Friendly) -->
+    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <style>
         body {
             background-color: #121212;
@@ -113,7 +113,7 @@
             try {
                 if (!ffmpeg) {
                     ffmpeg = createFFmpeg({
-                        coreURL: "https://unpkg.com/@ffmpeg/core@0.11.6/dist/ffmpeg-core.js",
+                        coreURL: "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.6/dist/ffmpeg-core.js",
                         log: true
                     });
                 }
@@ -165,7 +165,7 @@
 
             } catch (error) {
                 console.error(error);
-                statusText.textContent = 'ত্রুটি ঘটেছে! ইন্টারনেট কানেকশন চেক করুন।';
+                statusText.textContent = 'ত্রুটি ঘটেছে! কনসোল চেক করুন।';
                 processBtn.removeAttribute('disabled');
             }
         });
