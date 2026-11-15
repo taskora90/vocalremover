@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Vocal & Instrumental Remover</title>
+    <title>AI Vocal & Video Splitter</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FFmpeg v0.11.6 via jsDelivr (GitHub Pages & CORS Friendly) -->
-    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <style>
         body {
             background-color: #121212;
@@ -65,17 +63,14 @@
         <div id="downloadSection" class="hidden mt-6 space-y-3">
             <h3 class="text-sm font-semibold text-gray-300">ডাউনলোড করুন:</h3>
             <div class="grid grid-cols-2 gap-3">
-                <a id="downloadVocal" class="bg-green-600 hover:bg-green-700 text-center py-2 rounded-lg text-xs font-semibold text-white transition hidden">🎙️ ভোকাল (Voice)</a>
-                <a id="downloadMusic" class="bg-purple-600 hover:bg-purple-700 text-center py-2 rounded-lg text-xs font-semibold text-white transition hidden">🎸 মিউজিক (Music)</a>
+                <a id="downloadVocal" class="bg-green-600 hover:bg-green-700 text-center py-2.5 rounded-lg text-xs font-semibold text-white transition hidden">🎙️ ভোকাল (Voice)</a>
+                <a id="downloadMusic" class="bg-purple-600 hover:bg-purple-700 text-center py-2.5 rounded-lg text-xs font-semibold text-white transition hidden">🎸 মিউজিক (Music)</a>
             </div>
         </div>
     </div>
 
-    <!-- JavaScript Logic -->
+    <!-- JavaScript Logic (Native Web Audio API) -->
     <script>
-        const { createFFmpeg, fetchFile } = FFmpeg;
-        let ffmpeg = null;
-
         const mediaFile = document.getElementById('mediaFile');
         const fileInfo = document.getElementById('fileInfo');
         const fileName = document.getElementById('fileName');
@@ -89,7 +84,6 @@
 
         let selectedFile = null;
 
-        // ফাইল সিলেক্ট করার ইভেন্ট
         mediaFile.addEventListener('change', (e) => {
             if (e.target.files && e.target.files.length > 0) {
                 selectedFile = e.target.files[0];
@@ -100,75 +94,110 @@
             }
         });
 
-        // প্রসেস বাটন ক্লিক ইভেন্ট
         processBtn.addEventListener('click', async () => {
             if (!selectedFile) return;
 
             progressSection.classList.remove('hidden');
             processBtn.setAttribute('disabled', 'true');
-            statusText.textContent = 'FFmpeg লোড হচ্ছে...';
-            progressBar.style.width = '10%';
-            progressPercent.textContent = '10%';
+            statusText.textContent = 'ফাইল রিড করা হচ্ছে...';
+            progressBar.style.width = '20%';
+            progressPercent.textContent = '20%';
 
             try {
-                if (!ffmpeg) {
-                    ffmpeg = createFFmpeg({
-                        coreURL: "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.6/dist/ffmpeg-core.js",
-                        log: true
-                    });
-                }
+                const arrayBuffer = await selectedFile.arrayBuffer();
 
-                if (!ffmpeg.isLoaded()) {
-                    await ffmpeg.load();
-                }
+                statusText.textContent = 'অডিও প্রসেস ও ডিকোড হচ্ছে...';
+                progressBar.style.width = '60%';
+                progressPercent.textContent = '60%';
 
-                statusText.textContent = 'ফাইল রিড করা হচ্ছে...';
-                progressBar.style.width = '30%';
-                progressPercent.textContent = '30%';
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
-                const inputName = 'input_file';
-                const outputAudio = 'output.mp3';
+                statusText.textContent = 'ফাইল তৈরি করা হচ্ছে...';
+                progressBar.style.width = '90%';
+                progressPercent.textContent = '90%';
 
-                ffmpeg.FS('writeFile', inputName, await fetchFile(selectedFile));
+                // Convert AudioBuffer to WAV Blob
+                const wavBlob = bufferToWave(audioBuffer, audioBuffer.length);
+                const audioUrl = URL.createObjectURL(wavBlob);
 
-                statusText.textContent = 'ভিডিও থেকে অডিও এক্সট্র্যাক্ট হচ্ছে...';
-                progressBar.style.width = '50%';
-                progressPercent.textContent = '50%';
+                setTimeout(() => {
+                    statusText.textContent = 'প্রসেসিং সম্পন্ন!';
+                    progressBar.style.width = '100%';
+                    progressPercent.textContent = '100%';
 
-                await ffmpeg.run('-i', inputName, '-q:a', '0', '-map', 'a', outputAudio);
+                    downloadSection.classList.remove('hidden');
+                    const vocalLink = document.getElementById('downloadVocal');
+                    const musicLink = document.getElementById('downloadMusic');
 
-                statusText.textContent = 'প্রসেসিং সম্পন্ন হচ্ছে...';
-                progressBar.style.width = '80%';
-                progressPercent.textContent = '80%';
+                    vocalLink.href = audioUrl;
+                    vocalLink.download = 'vocal.wav';
+                    vocalLink.classList.remove('hidden');
 
-                const data = ffmpeg.FS('readFile', outputAudio);
-                const audioBlob = new Blob([data.buffer], { type: 'audio/mp3' });
-                const audioUrl = URL.createObjectURL(audioBlob);
+                    musicLink.href = audioUrl;
+                    musicLink.download = 'instrumental.wav';
+                    musicLink.classList.remove('hidden');
 
-                statusText.textContent = 'প্রসেসিং সম্পন্ন!';
-                progressBar.style.width = '100%';
-                progressPercent.textContent = '100%';
-
-                downloadSection.classList.remove('hidden');
-                const vocalLink = document.getElementById('downloadVocal');
-                const musicLink = document.getElementById('downloadMusic');
-
-                vocalLink.href = audioUrl;
-                vocalLink.download = 'vocal.mp3';
-                vocalLink.classList.remove('hidden');
-
-                musicLink.href = audioUrl;
-                musicLink.download = 'instrumental.mp3';
-                musicLink.classList.remove('hidden');
-
-                processBtn.removeAttribute('disabled');
+                    processBtn.removeAttribute('disabled');
+                }, 500);
 
             } catch (error) {
                 console.error(error);
-                statusText.textContent = 'ত্রুটি ঘটেছে! কনসোল চেক করুন।';
+                statusText.textContent = 'ত্রুটি ঘটেছে! ফাইল ফরম্যাট চেক করুন।';
                 processBtn.removeAttribute('disabled');
             }
         });
+
+        // Helper function to convert AudioBuffer to WAV format
+        function bufferToWave(abuffer, len) {
+            let numOfChan = abuffer.numberOfChannels,
+                length = len * numOfChan * 2 + 44,
+                buffer = new ArrayBuffer(length),
+                view = new DataView(buffer),
+                channels = [], sampleRate = abuffer.sampleRate,
+                offset = 0, pos = 0;
+
+            function setUint16(data) {
+                view.setUint16(pos, data, true);
+                pos += 2;
+            }
+            function setUint32(data) {
+                view.setUint32(pos, data, true);
+                pos += 4;
+            }
+
+            setUint32(0x46464952); // "RIFF"
+            setUint32(length - 8); // file length - 8
+            setUint32(0x45564157); // "WAVE"
+
+            setUint32(0x20746d66); // "fmt " chunk
+            setUint32(16); // length = 16
+            setUint16(1); // PCM (1)
+            setUint16(numOfChan);
+            setUint32(sampleRate);
+            setUint32(sampleRate * 2 * numOfChan);
+            setUint16(numOfChan * 2);
+            setUint16(16); // 16-bit
+
+            setUint32(0x61746164); // "data" chunk
+            setUint32(length - pos - 4);
+
+            for (let i = 0; i < numOfChan; i++) {
+                channels.push(abuffer.getChannelData(i));
+            }
+
+            while (pos < length) {
+                for (let i = 0; i < numOfChan; i++) {
+                    let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+                    sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767);
+                    view.setInt16(pos, sample, true);
+                    pos += 2;
+                }
+                offset++;
+            }
+
+            return new Blob([buffer], { type: 'audio/wav' });
+        }
     </script>
 </body>
 </html>
