@@ -24,7 +24,7 @@
     <div class="w-full max-w-2xl glass-card rounded-2xl shadow-2xl p-6 md:p-8 space-y-6">
         <div class="text-center">
             <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500">🎬 Only Voice - Lyric Maker</h1>
-            <p class="text-xs text-gray-400 mt-1">নিখুঁত টাইম সিঙ্ক, ট্রেন্ডিং ইফেক্ট ও কাস্টম ব্যাকগ্রাউন্ডসহ লিরিক ভিডিও তৈরি করুন!</p>
+            <p class="text-xs text-gray-400 mt-1">অডিও ট্রিম, টাইম সিঙ্ক ও ট্রেন্ডিং ইফেক্টসহ লিরিক ভিডিও তৈরি করুন!</p>
         </div>
 
         <!-- Branding Settings -->
@@ -65,6 +65,25 @@
             </div>
         </div>
 
+        <!-- Audio Trimming Section (Appears after audio is uploaded) -->
+        <div id="trimSection" class="hidden bg-slate-900/50 p-4 rounded-xl border border-slate-800 space-y-3">
+            <h3 class="text-xs font-semibold text-purple-300">✂️ অডিও ট্রিম / কেটে ছোট করুন:</h3>
+            <p id="audioDurationText" class="text-xs text-gray-400">মোট স্থায়িত্ব: ০ সেকেন্ড</p>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">শুরু সময় (সেকেন্ড):</label>
+                    <input type="number" id="trimStart" value="0" step="0.1" min="0" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-purple-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">শেষ সময় (সেকেন্ড):</label>
+                    <input type="number" id="trimEnd" value="0" step="0.1" min="0" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-purple-500">
+                </div>
+            </div>
+            <button id="applyTrimBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl transition shadow-md text-xs">
+                ✂️ অডিও কেটে এই নির্দিষ্ট অংশটি রাখুন
+            </button>
+        </div>
+
         <!-- Custom Video Upload Box -->
         <div id="customVideoSection" class="hidden bg-slate-900/50 p-4 rounded-xl border border-slate-800 space-y-3">
             <div>
@@ -88,7 +107,7 @@
         <!-- Step 3: Interactive Sync Control Box -->
         <div class="bg-slate-900/80 p-4 rounded-xl border border-purple-500/40 text-center space-y-3">
             <h3 class="text-xs font-semibold text-purple-300">🎙️ লিরিক টাইম সিঙ্ক (টাইমিং মেলানোর উপায়):</h3>
-            <p id="syncStatusText" class="text-xs text-gray-400">প্রথমে অডিও ও লিরিক দিয়ে নিচের 'সিঙ্ক শুরু করুন' বাটনে ক্লিক করুন।</p>
+            <p id="syncStatusText" class="text-xs text-gray-400">প্রথমে অডিও ট্রিম করে লিরিক দিয়ে নিচের 'সিঙ্ক শুরু করুন' বাটনে ক্লিক করুন।</p>
             <button id="startSyncBtn" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 rounded-xl transition shadow-md text-xs disabled:opacity-50" disabled>
                 ⏱️ লিরিক সিঙ্ক শুরু করুন (ট্যাপ করে টাইম সেট করুন)
             </button>
@@ -139,8 +158,17 @@
         const autoZoomCheck = document.getElementById('autoZoomCheck');
         const stopContainer = document.getElementById('stopContainer');
         const stopRecordBtn = document.getElementById('stopRecordBtn');
+        
+        // Trimming Elements
+        const trimSection = document.getElementById('trimSection');
+        const audioDurationText = document.getElementById('audioDurationText');
+        const trimStart = document.getElementById('trimStart');
+        const trimEnd = document.getElementById('trimEnd');
+        const applyTrimBtn = document.getElementById('applyTrimBtn');
 
         let audioElement = null;
+        let audioContext = null;
+        let rawAudioBuffer = null;
         let customVideoElement = document.createElement('video');
         customVideoElement.loop = true;
         customVideoElement.muted = true;
@@ -190,20 +218,121 @@
             }
         });
 
-        audioFile.addEventListener('change', (e) => {
+        // Handle Audio Upload & Decoding for Trimming
+        audioFile.addEventListener('change', async (e) => {
             const file = e.target.files[0];
-            if (file) {
-                if (audioElement) audioElement.pause();
-                audioElement = new Audio(URL.createObjectURL(file));
-                audioElement.crossOrigin = "anonymous";
-                audioElement.onloadedmetadata = () => {
-                    startSyncBtn.removeAttribute('disabled');
-                    syncStatusText.textContent = 'অডিও লোড হয়েছে। এখন লিরিক সিঙ্ক করুন।';
-                };
-            }
+            if (!file) return;
+
+            if (audioElement) audioElement.pause();
+
+            const arrayBuffer = await file.arrayBuffer();
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            rawAudioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+            const duration = rawAudioBuffer.duration.toFixed(1);
+            audioDurationText.textContent = `মোট স্থায়িত্ব: ${duration} সেকেন্ড`;
+            trimStart.value = 0;
+            trimEnd.value = duration;
+            trimEnd.max = duration;
+
+            trimSection.classList.remove('hidden');
+            syncStatusText.textContent = 'অডিও আপলোড হয়েছে। চাইলে ট্রিম করুন অথবা সরাসরি সিঙ্ক শুরু করুন।';
+            startSyncBtn.removeAttribute('disabled');
+
+            // Set initial untrimmed audio as default
+            const wavBlob = bufferToWavBlob(rawAudioBuffer);
+            audioElement = new Audio(URL.createObjectURL(wavBlob));
+            audioElement.crossOrigin = "anonymous";
         });
 
-        // --- Tap-to-Sync Feature Logic with Live Preview ---
+        // Apply Audio Trimming
+        applyTrimBtn.addEventListener('click', () => {
+            if (!rawAudioBuffer) return;
+
+            let startSec = parseFloat(trimStart.value) || 0;
+            let endSec = parseFloat(trimEnd.value) || rawAudioBuffer.duration;
+
+            if (startSec < 0) startSec = 0;
+            if (endSec > rawAudioBuffer.duration) endSec = rawAudioBuffer.duration;
+            if (startSec >= endSec) {
+                alert('শেষ সময় শুরু সময় থেকে বেশি হতে হবে!');
+                return;
+            }
+
+            const sampleRate = rawAudioBuffer.sampleRate;
+            const startFrame = Math.floor(startSec * sampleRate);
+            const endFrame = Math.floor(endSec * sampleRate);
+            const frameCount = endFrame - startFrame;
+
+            const trimmedBuffer = audioContext.createBuffer(
+                rawAudioBuffer.numberOfChannels,
+                frameCount,
+                sampleRate
+            );
+
+            for (let channel = 0; channel < rawAudioBuffer.numberOfChannels; channel++) {
+                const sourceData = rawAudioBuffer.getChannelData(channel);
+                const trimmedData = trimmedBuffer.getChannelData(channel);
+                for (let i = 0; i < frameCount; i++) {
+                    trimmedData[i] = sourceData[startFrame + i];
+                }
+            }
+
+            const wavBlob = bufferToWavBlob(trimmedBuffer);
+            audioElement = new Audio(URL.createObjectURL(wavBlob));
+            audioElement.crossOrigin = "anonymous";
+
+            alert(`✅ সফলভাবে অডিও ট্রিম করা হয়েছে (${startSec}s থেকে ${endSec}s)!`);
+            startSyncBtn.removeAttribute('disabled');
+        });
+
+        // Helper: Convert AudioBuffer to WAV Blob
+        function bufferToWavBlob(buffer) {
+            const numOfChan = buffer.numberOfChannels;
+            const length = buffer.length * numOfChan * 2 + 44;
+            const out = new DataView(new ArrayBuffer(length));
+            let channels = [];
+            let sampleRate = buffer.sampleRate;
+            let offset = 0;
+            let pos = 0;
+
+            function writeString(str) {
+                for (let i = 0; i < str.length; i++) {
+                    out.setUint8(pos++, str.charCodeAt(i));
+                }
+            }
+
+            writeString('RIFF');
+            out.setUint32(pos, length - 8, true); pos += 4;
+            writeString('WAVE');
+            writeString('fmt ');
+            out.setUint32(pos, 16, true); pos += 4;
+            out.setUint16(pos, 1, true); pos += 2;
+            out.setUint16(pos, numOfChan, true); pos += 2;
+            out.setUint32(pos, sampleRate, true); pos += 4;
+            out.setUint32(pos, sampleRate * 2 * numOfChan, true); pos += 4;
+            out.setUint16(pos, numOfChan * 2, true); pos += 2;
+            out.setUint16(pos, 16, true); pos += 2;
+            writeString('data');
+            out.setUint32(pos, length - pos - 4, true); pos += 4;
+
+            for (let i = 0; i < buffer.numberOfChannels; i++) {
+                channels.push(buffer.getChannelData(i));
+            }
+
+            while (offset < buffer.length) {
+                for (let i = 0; i < numOfChan; i++) {
+                    let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+                    sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0;
+                    out.setInt16(pos, sample, true); pos += 2;
+                }
+                offset++;
+            }
+
+            return new Blob([out.buffer], { type: 'audio/wav' });
+        }
+
+        // --- Tap-to-Sync Feature Logic ---
         startSyncBtn.addEventListener('click', () => {
             const text = lyricsInput.value.trim();
             if (!text) {
@@ -256,9 +385,7 @@
                 playPreviewBtn.removeAttribute('disabled');
                 recordBtn.removeAttribute('disabled');
             }
-        });
-
-        function getActiveLyric(currentTime) {
+        });function getActiveLyric(currentTime) {
             if (lineTimestamps.length === 0) return lines[0] || '';
             let activeIdx = 0;
             for (let i = 0; i < lineTimestamps.length; i++) {
@@ -307,7 +434,6 @@
                 context.shadowColor = '#9333ea';
                 context.shadowBlur = 20;
             } else {
-                // standard
                 context.fillStyle = '#ffffff';
                 context.shadowColor = 'rgba(0, 0, 0, 0.9)';
                 context.shadowBlur = 15;
@@ -403,7 +529,7 @@
             ctx.fillText(pageName, pillX + 65, pillY + 31);
             ctx.restore();
 
-            // Draw Lyrics with Selected Effect & Bounce Animation
+            // Draw Lyrics
             ctx.save();
             ctx.font = 'bold 45px sans-serif';
             ctx.textAlign = 'center';
@@ -452,7 +578,7 @@
             updateCanvas();
         });
 
-        // Video Recording & Download with Manual Stop Button
+        // Video Recording & Download
         let mediaRecorder;
         let recordedChunks = [];
 
