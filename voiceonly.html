@@ -28,33 +28,32 @@
         </div>
 
        <!-- Step 1: Audio/Video & Effect Selection -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-    <div>
-        <label class="block text-xs font-semibold text-gray-300 mb-2">অডিও বা ভিডিও ফাইল (MP3/MP4):</label>
-        <input type="file" id="audioFile" accept="audio/*,video/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer">
-    </div>
-    <div>
-        <label class="block text-xs font-semibold text-gray-300 mb-2">ব্যাকগ্রাউন্ড ডিজাইন:</label>
-        <select id="bgTheme" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-purple-500">
-            <option value="gradient1">রয়্যাল পার্পল গ্রেডিয়েন্ট</option>
-            <option value="starry">তারাভরা রাত ও পার্টিকলস</option>
-            <option value="sunset">ইমোশনাল সানসেট</option>
-            <option value="custom">🎥 কাস্টম ভিডিও ব্যাকগ্রাউন্ড</option>
-        </select>
-    </div>
-    <div>
-        <label class="block text-xs font-semibold text-gray-300 mb-2">লিরিক টেক্সট ইফেক্ট:</label>
-        <select id="lyricEffect" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-purple-500">
-            <option value="standard">✨ ক্লাসিক গ্লো ও শ্যাডো</option>
-            <option value="neon">💡 নিয়ন গ্লো (Neon Glow)</option>
-            <option value="bounce">🔥 বাউন্সি পপ-আপ (Reels Style)</option>
-            <option value="gradientText">🌈 কালারফুল গ্রেডিয়েন্ট টেক্সট</option>
-            <option value="wordByWord">🎤 ওয়ার্ড-বাই-ওয়ার্ড (Karaoke Style)</option>
-            <option value="fadeEffect">🌫️ স্মুথ ফেড ইন-আউট (Fade Effect)</option>
-        </select>
-    </div>
-</div>
-
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2">অডিও বা ভিডিও ফাইল (MP3/MP4):</label>
+                <input type="file" id="audioFile" accept="audio/*,video/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2">ব্যাকগ্রাউন্ড ডিজাইন:</label>
+                <select id="bgTheme" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-purple-500">
+                    <option value="gradient1">রয়্যাল পার্পল গ্রেডিয়েন্ট</option>
+                    <option value="starry">তারাভরা রাত ও পার্টিকলস</option>
+                    <option value="sunset">ইমোশনাল সানসেট</option>
+                    <option value="custom">🎥 কাস্টম ভিডিও ব্যাকগ্রাউন্ড</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2">লিরিক টেক্সট ইফেক্ট:</label>
+                <select id="lyricEffect" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-purple-500">
+                    <option value="standard">✨ ক্লাসিক গ্লো ও শ্যাডো</option>
+                    <option value="neon">💡 নিয়ন গ্লো (Neon Glow)</option>
+                    <option value="bounce">🔥 বাউন্সি পপ-আপ (Reels Style)</option>
+                    <option value="gradientText">🌈 কালারফুল গ্রেডিয়েন্ট টেক্সট</option>
+                    <option value="wordByWord">🎤 ওয়ার্ড-বাই-ওয়ার্ড (Karaoke Style)</option>
+                    <option value="fadeEffect">🌫️ স্মুথ ফেড ইন-আউট (Fade Effect)</option>
+                </select>
+            </div>
+        </div>
 
         <!-- Audio Trimming Section -->
         <div id="trimSection" class="hidden bg-slate-900/50 p-4 rounded-xl border border-slate-800 space-y-3">
@@ -129,6 +128,7 @@
             </button>
         </div>
     </div>
+
 <style>
     body {
         background-color: #0f172a;
@@ -141,6 +141,7 @@
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
 </style>
+
 <script>
     const audioFile = document.getElementById('audioFile');
     const lyricsInput = document.getElementById('lyricsInput');
@@ -161,7 +162,6 @@
     const stopContainer = document.getElementById('stopContainer');
     const stopRecordBtn = document.getElementById('stopRecordBtn');
 
-    // Trimming Elements
     const trimSection = document.getElementById('trimSection');
     const audioDurationText = document.getElementById('audioDurationText');
     const trimStart = document.getElementById('trimStart');
@@ -220,36 +220,45 @@
         }
     });
 
-    // Handle Audio Upload & Decoding for Trimming
     audioFile.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
         if (audioElement) audioElement.pause();
 
-        const arrayBuffer = await file.arrayBuffer();
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        rawAudioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        if (file.type.startsWith('video/')) {
+            customVideoElement.src = URL.createObjectURL(file);
+            customVideoElement.load();
+            bgTheme.value = 'custom';
+            customVideoSection.classList.remove('hidden');
+        }
 
-        const duration = rawAudioBuffer.duration.toFixed(1);
-        audioDurationText.textContent = `মোট স্থায়িত্ব: ${duration} সেকেন্ড`;
-        trimStart.value = 0;
-        trimEnd.value = duration;
-        trimEnd.max = duration;
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            rawAudioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
-        trimSection.classList.remove('hidden');
-        syncStatusText.textContent = 'অডিও আপলোড হয়েছে। চাইলে ট্রিম করুন অথবা সরাসরি সিঙ্ক শুরু করুন।';
-        startSyncBtn.removeAttribute('disabled');
+            const duration = rawAudioBuffer.duration.toFixed(1);
+            audioDurationText.textContent = `মোট স্থায়িত্ব: ${duration} সেকেন্ড`;
+            trimStart.value = 0;
+            trimEnd.value = duration;
+            trimEnd.max = duration;
 
-        const wavBlob = bufferToWavBlob(rawAudioBuffer);
-        audioElement = new Audio(URL.createObjectURL(wavBlob));
-        audioElement.crossOrigin = "anonymous";
+            trimSection.classList.remove('hidden');
+            syncStatusText.textContent = 'ফাইল সফলভাবে লোড হয়েছে! চাইলে ট্রিম করুন অথবা সিঙ্ক শুরু করুন।';
+            startSyncBtn.removeAttribute('disabled');
+
+            const wavBlob = bufferToWavBlob(rawAudioBuffer);
+            audioElement = new Audio(URL.createObjectURL(wavBlob));
+            audioElement.crossOrigin = "anonymous";
+        } catch (error) {
+            console.error(error);
+            alert('এই ফাইল থেকে অডিও এক্সট্রাক্ট করা যায়নি।');
+        }
     });
 
-    // Apply Audio Trimming
     applyTrimBtn.addEventListener('click', () => {
         if (!rawAudioBuffer) return;
-
         let startSec = parseFloat(trimStart.value) || 0;
         let endSec = parseFloat(trimEnd.value) || rawAudioBuffer.duration;
 
@@ -287,7 +296,6 @@
         startSyncBtn.removeAttribute('disabled');
     });
 
-    // Helper: Convert AudioBuffer to WAV Blob
     function bufferToWavBlob(buffer) {
         const numOfChan = buffer.numberOfChannels;
         const length = buffer.length * numOfChan * 2 + 44;
@@ -329,10 +337,8 @@
             }
             offset++;
         }
-
         return new Blob([out.buffer], { type: 'audio/wav' });
     }
-
     // Tap-to-Sync Feature Logic
     startSyncBtn.addEventListener('click', () => {
         const text = lyricsInput.value.trim();
@@ -387,8 +393,7 @@
             recordBtn.removeAttribute('disabled');
         }
     });
-</script>
-<script>
+
     function getActiveLyric(currentTime) {
         if (lineTimestamps.length === 0) return lines[0] || '';
         let activeIdx = 0;
@@ -400,7 +405,6 @@
         return lines[activeIdx] || '';
     }
 
-    // Enhanced Text Rendering with New Effects (Word-by-Word & Fade)
     function wrapTextWithEffect(context, text, x, y, maxWidth, lineHeight, effect, currentTime) {
         let words = text.split(' ');
         let line = '';
@@ -423,7 +427,6 @@
 
         context.save();
 
-        // Fade Effect Handling (Opacity Animation)
         if (effect === 'fadeEffect') {
             let activeLineIdx = 0;
             for (let i = 0; i < lineTimestamps.length; i++) {
@@ -431,7 +434,7 @@
             }
             let lineStartTime = lineTimestamps[activeLineIdx] || 0;
             let timeSinceStart = currentTime - lineStartTime;
-            let alpha = Math.min(1, timeSinceStart * 2.5); // Fade in over 0.4s
+            let alpha = Math.min(1, timeSinceStart * 2.5);
             context.globalAlpha = alpha;
         }
 
@@ -457,7 +460,6 @@
             context.shadowBlur = 15;
         }
 
-        // Word-by-Word (Karaoke) Effect Handling
         if (effect === 'wordByWord') {
             let activeLineIdx = 0;
             for (let i = 0; i < lineTimestamps.length; i++) {
@@ -525,7 +527,6 @@
             ctx.fill();
         }
 
-        // Branding Watermark
         const padding = 40;
         const pageName = pageNameInput.value || 'Only Voice';
 
@@ -565,7 +566,6 @@
         ctx.fillText(pageName, pillX + 65, pillY + 31);
         ctx.restore();
 
-        // Draw Lyrics
         ctx.save();
         ctx.font = 'bold 45px sans-serif';
         ctx.textAlign = 'center';
@@ -614,7 +614,6 @@
         updateCanvas();
     });
 
-    // Video Recording & Download
     let mediaRecorder;
     let recordedChunks = [];
 
@@ -696,44 +695,6 @@
         stopRecordingProcess();
     });
 </script>
-// Handle Audio or Video File Upload & Extraction
-audioFile.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (audioElement) audioElement.pause();
-
-    // যদি ব্যবহারকারী ভিডিও ফাইল আপলোড করেন, তবে সেটি স্বয়ংক্রিয়ভাবে ব্যাকগ্রাউন্ড ভিডিও হিসেবেও সেট হয়ে যাবে!
-    if (file.type.startsWith('video/')) {
-        customVideoElement.src = URL.createObjectURL(file);
-        customVideoElement.load();
-        bgTheme.value = 'custom';
-        customVideoSection.classList.remove('hidden');
-    }
-
-    try {
-        const arrayBuffer = await file.arrayBuffer();
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        rawAudioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-
-        const duration = rawAudioBuffer.duration.toFixed(1);
-        audioDurationText.textContent = `মোট স্থায়িত্ব: ${duration} সেকেন্ড`;
-        trimStart.value = 0;
-        trimEnd.value = duration;
-        trimEnd.max = duration;
-
-        trimSection.classList.remove('hidden');
-        syncStatusText.textContent = 'ফাইল সফলভাবে লোড হয়েছে! চাইলে ট্রিম করুন অথবা সিঙ্ক শুরু করুন।';
-        startSyncBtn.removeAttribute('disabled');
-
-        const wavBlob = bufferToWavBlob(rawAudioBuffer);
-        audioElement = new Audio(URL.createObjectURL(wavBlob));
-        audioElement.crossOrigin = "anonymous";
-    } catch (error) {
-        console.error(error);
-        alert('এই ফাইল থেকে অডিও এক্সট্রাক্ট করা যায়নি। দয়া করে অন্য কোনো পরিষ্কার ফরম্যাটের অডিও বা ভিডিও দিন।');
-    }
-});
 
 </body>
 </html>
