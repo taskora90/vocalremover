@@ -89,11 +89,8 @@
         </div>
 
         <!-- Step 4: Live Preview Canvas -->
-        <div class="relative w-full aspect-[9/16] max-h-[320px] bg-black rounded-xl overflow-hidden flex flex-col items-center justify-center border border-slate-700 shadow-inner">
+        <div class="relative w-full aspect-[9/16] max-h-[350px] bg-black rounded-xl overflow-hidden flex flex-col items-center justify-center border border-slate-700 shadow-inner">
             <canvas id="videoCanvas" width="720" height="1280" class="w-full h-full object-contain"></canvas>
-            <div id="previewOverlay" class="absolute inset-0 flex items-center justify-center p-6 text-center pointer-events-none">
-                <p id="lyricDisplay" class="text-xl md:text-2xl font-bold text-white drop-shadow-lg leading-relaxed">এখানে আপনার লিরিকস ভেসে উঠবে...</p>
-            </div>
         </div>
 
         <!-- Controls & Record Button -->
@@ -103,6 +100,13 @@
             </button>
             <button id="recordBtn" class="flex-1 bg-pink-600 hover:bg-pink-700 text-white font-semibold py-3 rounded-xl transition shadow-lg text-sm disabled:opacity-50" disabled>
                 🔴 ভিডিও রেকর্ড ও ডাউনলোড করুন
+            </button>
+        </div>
+
+        <!-- Manual Stop Recording Button -->
+        <div id="stopContainer" class="hidden">
+            <button id="stopRecordBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition shadow-lg text-sm animate-pulse">
+                🛑 রেকর্ডিং থামিয়ে ভিডিও ডাউনলোড করুন
             </button>
         </div>
     </div>
@@ -115,7 +119,6 @@
         const startSyncBtn = document.getElementById('startSyncBtn');
         const tapLineBtn = document.getElementById('tapLineBtn');
         const syncStatusText = document.getElementById('syncStatusText');
-        const lyricDisplay = document.getElementById('lyricDisplay');
         const canvas = document.getElementById('videoCanvas');
         const ctx = canvas.getContext('2d');
         const bgTheme = document.getElementById('bgTheme');
@@ -124,6 +127,8 @@
         const customVideoSection = document.getElementById('customVideoSection');
         const customVideoFile = document.getElementById('customVideoFile');
         const autoZoomCheck = document.getElementById('autoZoomCheck');
+        const stopContainer = document.getElementById('stopContainer');
+        const stopRecordBtn = document.getElementById('stopRecordBtn');
 
         let audioElement = null;
         let customVideoElement = document.createElement('video');
@@ -179,6 +184,7 @@
             if (file) {
                 if (audioElement) audioElement.pause();
                 audioElement = new Audio(URL.createObjectURL(file));
+                audioElement.crossOrigin = "anonymous";
                 audioElement.onloadedmetadata = () => {
                     startSyncBtn.removeAttribute('disabled');
                     syncStatusText.textContent = 'অডিও লোড হয়েছে। এখন লিরিক সিঙ্ক করুন।';
@@ -241,7 +247,6 @@
             return lines[activeIdx] || '';
         }
 
-        // Helper function for text wrapping on canvas
         function wrapText(context, text, x, y, maxWidth, lineHeight) {
             let words = text.split(' ');
             let line = '';
@@ -350,7 +355,7 @@
             ctx.fillText(pageName, pillX + 65, pillY + 31);
             ctx.restore();
 
-            // Draw Lyrics
+            // Draw Lyrics nicely
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 45px sans-serif';
             ctx.textAlign = 'center';
@@ -379,9 +384,7 @@
                 let currentTime = audioElement.currentTime;
                 let currentText = getActiveLyric(currentTime);
 
-                lyricDisplay.textContent = currentText;
                 drawCanvasContent(bgTheme.value, currentTime, currentText);
-
                 animationId = requestAnimationFrame(updateCanvas);
             }
 
@@ -389,7 +392,7 @@
             updateCanvas();
         });
 
-        // Video Recording & Download
+        // Video Recording & Download with Manual Stop Button
         let mediaRecorder;
         let recordedChunks = [];
 
@@ -431,33 +434,44 @@
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
+
                 recordBtn.textContent = '🔴 ভিডিও রেকর্ড ও ডাউনলোড করুন';
                 recordBtn.removeAttribute('disabled');
+                stopContainer.classList.add('hidden');
             };
 
             mediaRecorder.start();
-            recordBtn.textContent = '⏳ ভিডিও রেকর্ড হচ্ছে... (শেষ পর্যন্ত অপেক্ষা করুন)';
+            recordBtn.textContent = '⏳ রেকর্ডিং চলছে...';
             recordBtn.setAttribute('disabled', 'true');
+            stopContainer.classList.remove('hidden');
 
             function recordLoop() {
                 if (audioElement.ended) {
-                    audioElement.pause();
-                    if (bgTheme.value === 'custom') customVideoElement.pause();
-                    mediaRecorder.stop();
-                    cancelAnimationFrame(animationId);
+                    stopRecordingProcess();
                     return;
                 }
 
                 let currentTime = audioElement.currentTime;
                 let currentText = getActiveLyric(currentTime);
 
-                lyricDisplay.textContent = currentText;
                 drawCanvasContent(bgTheme.value, currentTime, currentText);
-
                 animationId = requestAnimationFrame(recordLoop);
             }
 
             recordLoop();
+        });
+
+        function stopRecordingProcess() {
+            if (audioElement) audioElement.pause();
+            if (bgTheme.value === 'custom') customVideoElement.pause();
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            cancelAnimationFrame(animationId);
+        }
+
+        stopRecordBtn.addEventListener('click', () => {
+            stopRecordingProcess();
         });
     </script>
 </body>
