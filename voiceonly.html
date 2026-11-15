@@ -695,5 +695,44 @@
         stopRecordingProcess();
     });
 </script>
+// Handle Audio or Video File Upload & Extraction
+audioFile.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (audioElement) audioElement.pause();
+
+    // যদি ব্যবহারকারী ভিডিও ফাইল আপলোড করেন, তবে সেটি স্বয়ংক্রিয়ভাবে ব্যাকগ্রাউন্ড ভিডিও হিসেবেও সেট হয়ে যাবে!
+    if (file.type.startsWith('video/')) {
+        customVideoElement.src = URL.createObjectURL(file);
+        customVideoElement.load();
+        bgTheme.value = 'custom';
+        customVideoSection.classList.remove('hidden');
+    }
+
+    try {
+        const arrayBuffer = await file.arrayBuffer();
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        rawAudioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+        const duration = rawAudioBuffer.duration.toFixed(1);
+        audioDurationText.textContent = `মোট স্থায়িত্ব: ${duration} সেকেন্ড`;
+        trimStart.value = 0;
+        trimEnd.value = duration;
+        trimEnd.max = duration;
+
+        trimSection.classList.remove('hidden');
+        syncStatusText.textContent = 'ফাইল সফলভাবে লোড হয়েছে! চাইলে ট্রিম করুন অথবা সিঙ্ক শুরু করুন।';
+        startSyncBtn.removeAttribute('disabled');
+
+        const wavBlob = bufferToWavBlob(rawAudioBuffer);
+        audioElement = new Audio(URL.createObjectURL(wavBlob));
+        audioElement.crossOrigin = "anonymous";
+    } catch (error) {
+        console.error(error);
+        alert('এই ফাইল থেকে অডিও এক্সট্রাক্ট করা যায়নি। দয়া করে অন্য কোনো পরিষ্কার ফরম্যাটের অডিও বা ভিডিও দিন।');
+    }
+});
+
 </body>
 </html>
