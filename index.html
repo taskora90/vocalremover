@@ -69,7 +69,7 @@
         </div>
     </div>
 
-    <!-- JavaScript Logic (Strict Noise Gate & Isolation) -->
+    <!-- JavaScript Logic (Ultra-Strict Noise Gate) -->
     <script>
         const mediaFile = document.getElementById('mediaFile');
         const fileInfo = document.getElementById('fileInfo');
@@ -113,13 +113,11 @@
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
-                statusText.textContent = 'মিউজিক সম্পূর্ণ রিমুভ ও ভোকাল ফিল্টার করা হচ্ছে...';
+                statusText.textContent = 'ভোকাল থেকে মিউজিক সম্পূর্ণ কাটছাঁট করা হচ্ছে...';
                 progressBar.style.width = '70%';
                 progressPercent.textContent = '70%';
 
-                // Extract Clean Vocal with Noise Gate & Strict Filtering
                 const vocalBuffer = await createVocalBuffer(audioBuffer);
-                // Extract Instrumental via Stereo Phase Cancellation
                 const musicBuffer = createMusicBuffer(audioBuffer, audioCtx);
 
                 statusText.textContent = 'ফাইল প্রস্তুত করা হচ্ছে...';
@@ -159,7 +157,7 @@
             }
         });
 
-        // Strict Vocal Isolation with Bandpass + Noise Gate
+        // Ultra-Strict Vocal Isolation
         async function createVocalBuffer(inputBuffer) {
             const offlineCtx = new OfflineAudioContext(
                 inputBuffer.numberOfChannels,
@@ -169,33 +167,24 @@
             const source = offlineCtx.createBufferSource();
             source.buffer = inputBuffer;
 
-            // Tight Bandpass filter for human voice
+            // Narrow Bandpass filter focused strictly on human voice
             const bandpass = offlineCtx.createBiquadFilter();
             bandpass.type = 'bandpass';
-            bandpass.frequency.value = 1400; 
-            bandpass.Q.value = 1.2;
-
-            // Compressor to boost vocal clarity
-            const compressor = offlineCtx.createDynamicsCompressor();
-            compressor.threshold.value = -20;
-            compressor.knee.value = 20;
-            compressor.ratio.value = 10;
-            compressor.attack.value = 0.005;
-            compressor.release.value = 0.1;
+            bandpass.frequency.value = 1500; 
+            bandpass.Q.value = 2.0; // Higher Q makes the filter narrower and sharper
 
             source.connect(bandpass);
-            bandpass.connect(compressor);
-            compressor.connect(offlineCtx.destination);
+            bandpass.connect(offlineCtx.destination);
             source.start(0);
 
             const renderedBuffer = await offlineCtx.startRendering();
 
-            // Strict Noise Gate: Completely cut off low-amplitude background instruments/noise
+            // Ultra-Strict Noise Gate: Cut off any sound below 0.15 amplitude to wipe lingering music
             for (let c = 0; c < renderedBuffer.numberOfChannels; c++) {
                 const data = renderedBuffer.getChannelData(c);
                 for (let i = 0; i < data.length; i++) {
-                    if (Math.abs(data[i]) < 0.07) {
-                        data[i] = 0; // Mute background instruments completely when voice isn't dominant
+                    if (Math.abs(data[i]) < 0.15) {
+                        data[i] = 0; 
                     }
                 }
             }
