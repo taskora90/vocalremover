@@ -24,7 +24,7 @@
     <div class="w-full max-w-2xl glass-card rounded-2xl shadow-2xl p-6 md:p-8 space-y-6">
         <div class="text-center">
             <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500">🎬 Only Voice - Lyric Maker</h1>
-            <p class="text-xs text-gray-400 mt-1">নিখুঁত টাইম সিঙ্ক ও কাস্টম ব্যাকগ্রাউন্ডসহ লিরিক ভিডিও তৈরি করুন!</p>
+            <p class="text-xs text-gray-400 mt-1">নিখুঁত টাইম সিঙ্ক, ট্রেন্ডিং ইফেক্ট ও কাস্টম ব্যাকগ্রাউন্ডসহ লিরিক ভিডিও তৈরি করুন!</p>
         </div>
 
         <!-- Branding Settings -->
@@ -39,11 +39,11 @@
             </div>
         </div>
 
-        <!-- Step 1: Audio & Background Selection -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Step 1: Audio, Background & Effect Selection -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
                 <label class="block text-xs font-semibold text-gray-300 mb-2">অডিও ফাইল (Vocal MP3):</label>
-                <input type="file" id="audioFile" accept="audio/*" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer">
+                <input type="file" id="audioFile" accept="audio/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer">
             </div>
             <div>
                 <label class="block text-xs font-semibold text-gray-300 mb-2">ব্যাকগ্রাউন্ড ডিজাইন:</label>
@@ -52,6 +52,15 @@
                     <option value="starry">তারাভরা রাত ও পার্টিকলস</option>
                     <option value="sunset">ইমোশনাল সানসেট</option>
                     <option value="custom">🎥 কাস্টম ভিডিও ব্যাকগ্রাউন্ড</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-2">লিরিক টেক্সট ইফেক্ট:</label>
+                <select id="lyricEffect" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-purple-500">
+                    <option value="standard">✨ ক্লাসিক গ্লো ও শ্যাডো</option>
+                    <option value="neon">💡 নিয়ন গ্লো (Neon Glow)</option>
+                    <option value="bounce">🔥 বাউন্সি পপ-আপ (Reels Style)</option>
+                    <option value="gradientText">🌈 কালারফুল গ্রেডিয়েন্ট টেক্সট</option>
                 </select>
             </div>
         </div>
@@ -122,6 +131,7 @@
         const canvas = document.getElementById('videoCanvas');
         const ctx = canvas.getContext('2d');
         const bgTheme = document.getElementById('bgTheme');
+        const lyricEffect = document.getElementById('lyricEffect');
         const pageNameInput = document.getElementById('pageNameInput');
         const logoFile = document.getElementById('logoFile');
         const customVideoSection = document.getElementById('customVideoSection');
@@ -193,7 +203,7 @@
             }
         });
 
-        // --- Tap-to-Sync Feature Logic with Live Canvas Preview ---
+        // --- Tap-to-Sync Feature Logic with Live Preview ---
         startSyncBtn.addEventListener('click', () => {
             const text = lyricsInput.value.trim();
             if (!text) {
@@ -216,12 +226,11 @@
             syncStatusText.innerHTML = `সঠিক সময়ে ট্যাপ করুন: <strong class="text-pink-400">"${lines[0]}"</strong>`;
             tapLineBtn.textContent = `১ম লাইনের সময় মার্ক করতে ট্যাপ করুন`;
 
-            // Start live canvas preview loop during syncing
             function syncLoop() {
                 if (audioElement.paused || audioElement.ended) return;
                 let currentTime = audioElement.currentTime;
                 let currentText = getActiveLyric(currentTime);
-                drawCanvasContent(bgTheme.value, currentTime, currentText);
+                drawCanvasContent(bgTheme.value, lyricEffect.value, currentTime, currentText);
                 syncAnimationId = requestAnimationFrame(syncLoop);
             }
             syncLoop();
@@ -229,7 +238,6 @@
 
         tapLineBtn.addEventListener('click', () => {
             let t = audioElement.currentTime;
-            // রিঅ্যাকশন ডিলে ও সঠিক সময়ে লিরিক আসার জন্য ০.৪ সেকেন্ড আগে অ্যাডজাস্ট করা হলো
             let adjustedTime = Math.max(0, t - 0.4);
             lineTimestamps.push(adjustedTime);
             currentSyncIndex++;
@@ -261,7 +269,7 @@
             return lines[activeIdx] || '';
         }
 
-        function wrapText(context, text, x, y, maxWidth, lineHeight) {
+        function wrapTextWithEffect(context, text, x, y, maxWidth, lineHeight, effect) {
             let words = text.split(' ');
             let line = '';
             let linesArray = [];
@@ -280,12 +288,38 @@
             linesArray.push(line);
 
             let startY = y - ((linesArray.length - 1) * lineHeight) / 2;
+
+            context.save();
+            if (effect === 'neon') {
+                context.shadowColor = '#ec4899';
+                context.shadowBlur = 25;
+                context.fillStyle = '#f472b6';
+            } else if (effect === 'gradientText') {
+                let grad = context.createLinearGradient(x - 200, startY, x + 200, startY + lineHeight);
+                grad.addColorStop(0, '#ec4899');
+                grad.addColorStop(0.5, '#a855f7');
+                grad.addColorStop(1, '#3b82f6');
+                context.fillStyle = grad;
+                context.shadowColor = 'rgba(0, 0, 0, 0.8)';
+                context.shadowBlur = 10;
+            } else if (effect === 'bounce') {
+                context.fillStyle = '#ffffff';
+                context.shadowColor = '#9333ea';
+                context.shadowBlur = 20;
+            } else {
+                // standard
+                context.fillStyle = '#ffffff';
+                context.shadowColor = 'rgba(0, 0, 0, 0.9)';
+                context.shadowBlur = 15;
+            }
+
             for(let k = 0; k < linesArray.length; k++) {
                 context.fillText(linesArray[k], x, startY + (k * lineHeight));
             }
+            context.restore();
         }
 
-        function drawCanvasContent(theme, progress, currentText) {
+        function drawCanvasContent(theme, effect, progress, currentText) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             if (theme === 'custom' && customVideoElement.readyState >= 2) {
@@ -369,12 +403,24 @@
             ctx.fillText(pageName, pillX + 65, pillY + 31);
             ctx.restore();
 
-            // Draw Lyrics nicely
-            ctx.fillStyle = '#ffffff';
+            // Draw Lyrics with Selected Effect & Bounce Animation
+            ctx.save();
             ctx.font = 'bold 45px sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            wrapText(ctx, currentText, canvas.width / 2, canvas.height / 2, canvas.width - 120, 65);
+
+            let renderX = canvas.width / 2;
+            let renderY = canvas.height / 2;
+
+            if (effect === 'bounce') {
+                let scale = 1 + Math.sin(progress * 8) * 0.04;
+                ctx.translate(renderX, renderY);
+                ctx.scale(scale, scale);
+                ctx.translate(-renderX, -renderY);
+            }
+
+            wrapTextWithEffect(ctx, currentText, renderX, renderY, canvas.width - 120, 65, effect);
+            ctx.restore();
         }
 
         playPreviewBtn.addEventListener('click', () => {
@@ -398,7 +444,7 @@
                 let currentTime = audioElement.currentTime;
                 let currentText = getActiveLyric(currentTime);
 
-                drawCanvasContent(bgTheme.value, currentTime, currentText);
+                drawCanvasContent(bgTheme.value, lyricEffect.value, currentTime, currentText);
                 animationId = requestAnimationFrame(updateCanvas);
             }
 
@@ -436,7 +482,6 @@
             mediaRecorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm;codecs=vp9' });
 
             mediaRecorder.ondataavailable = function(e) {
-                if (e.data.size > 0) recordedChunks.data = recordedChunks.push(e.data); // safe push
                 if (e.data.size > 0) recordedChunks.push(e.data);
             };
 
@@ -469,7 +514,7 @@
                 let currentTime = audioElement.currentTime;
                 let currentText = getActiveLyric(currentTime);
 
-                drawCanvasContent(bgTheme.value, currentTime, currentText);
+                drawCanvasContent(bgTheme.value, lyricEffect.value, currentTime, currentText);
                 animationId = requestAnimationFrame(recordLoop);
             }
 
