@@ -6,18 +6,6 @@
     <title>Only Voice - Synchronized Lyric Maker</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            background-color: #0f172a;
-            color: #f8fafc;
-            font-family: 'SolaimanLipi', sans-serif;
-        }
-        .glass-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-    </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
 
@@ -61,11 +49,13 @@
                     <option value="neon">💡 নিয়ন গ্লো (Neon Glow)</option>
                     <option value="bounce">🔥 বাউন্সি পপ-আপ (Reels Style)</option>
                     <option value="gradientText">🌈 কালারফুল গ্রেডিয়েন্ট টেক্সট</option>
+                    <option value="wordByWord">🎤 ওয়ার্ড-বাই-ওয়ার্ড (Karaoke Style)</option>
+                    <option value="fadeEffect">🌫️ স্মুথ ফেড ইন-আউট (Fade Effect)</option>
                 </select>
             </div>
         </div>
 
-        <!-- Audio Trimming Section (Appears after audio is uploaded) -->
+        <!-- Audio Trimming Section -->
         <div id="trimSection" class="hidden bg-slate-900/50 p-4 rounded-xl border border-slate-800 space-y-3">
             <h3 class="text-xs font-semibold text-purple-300">✂️ অডিও ট্রিম / কেটে ছোট করুন:</h3>
             <p id="audioDurationText" class="text-xs text-gray-400">মোট স্থায়িত্ব: ০ সেকেন্ড</p>
@@ -138,527 +128,572 @@
             </button>
         </div>
     </div>
-    <!-- JavaScript Logic -->
-    <script>
-        const audioFile = document.getElementById('audioFile');
-        const lyricsInput = document.getElementById('lyricsInput');
-        const playPreviewBtn = document.getElementById('playPreviewBtn');
-        const recordBtn = document.getElementById('recordBtn');
-        const startSyncBtn = document.getElementById('startSyncBtn');
-        const tapLineBtn = document.getElementById('tapLineBtn');
-        const syncStatusText = document.getElementById('syncStatusText');
-        const canvas = document.getElementById('videoCanvas');
-        const ctx = canvas.getContext('2d');
-        const bgTheme = document.getElementById('bgTheme');
-        const lyricEffect = document.getElementById('lyricEffect');
-        const pageNameInput = document.getElementById('pageNameInput');
-        const logoFile = document.getElementById('logoFile');
-        const customVideoSection = document.getElementById('customVideoSection');
-        const customVideoFile = document.getElementById('customVideoFile');
-        const autoZoomCheck = document.getElementById('autoZoomCheck');
-        const stopContainer = document.getElementById('stopContainer');
-        const stopRecordBtn = document.getElementById('stopRecordBtn');
-        
-        // Trimming Elements
-        const trimSection = document.getElementById('trimSection');
-        const audioDurationText = document.getElementById('audioDurationText');
-        const trimStart = document.getElementById('trimStart');
-        const trimEnd = document.getElementById('trimEnd');
-        const applyTrimBtn = document.getElementById('applyTrimBtn');
+<style>
+    body {
+        background-color: #0f172a;
+        color: #f8fafc;
+        font-family: 'SolaimanLipi', sans-serif;
+    }
+    .glass-card {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+</style>
+<script>
+    const audioFile = document.getElementById('audioFile');
+    const lyricsInput = document.getElementById('lyricsInput');
+    const playPreviewBtn = document.getElementById('playPreviewBtn');
+    const recordBtn = document.getElementById('recordBtn');
+    const startSyncBtn = document.getElementById('startSyncBtn');
+    const tapLineBtn = document.getElementById('tapLineBtn');
+    const syncStatusText = document.getElementById('syncStatusText');
+    const canvas = document.getElementById('videoCanvas');
+    const ctx = canvas.getContext('2d');
+    const bgTheme = document.getElementById('bgTheme');
+    const lyricEffect = document.getElementById('lyricEffect');
+    const pageNameInput = document.getElementById('pageNameInput');
+    const logoFile = document.getElementById('logoFile');
+    const customVideoSection = document.getElementById('customVideoSection');
+    const customVideoFile = document.getElementById('customVideoFile');
+    const autoZoomCheck = document.getElementById('autoZoomCheck');
+    const stopContainer = document.getElementById('stopContainer');
+    const stopRecordBtn = document.getElementById('stopRecordBtn');
 
-        let audioElement = null;
-        let audioContext = null;
-        let rawAudioBuffer = null;
-        let customVideoElement = document.createElement('video');
-        customVideoElement.loop = true;
-        customVideoElement.muted = true;
-        let lines = [];
-        let lineTimestamps = [];
-        let currentSyncIndex = 0;
-        let animationId = null;
-        let syncAnimationId = null;
-        let logoImg = null;
-        let stars = [];
+    // Trimming Elements
+    const trimSection = document.getElementById('trimSection');
+    const audioDurationText = document.getElementById('audioDurationText');
+    const trimStart = document.getElementById('trimStart');
+    const trimEnd = document.getElementById('trimEnd');
+    const applyTrimBtn = document.getElementById('applyTrimBtn');
 
-        for(let i=0; i<50; i++) {
-            stars.push({
-                x: Math.random() * 720,
-                y: Math.random() * 1280,
-                radius: Math.random() * 3,
-                alpha: Math.random()
-            });
+    let audioElement = null;
+    let audioContext = null;
+    let rawAudioBuffer = null;
+    let customVideoElement = document.createElement('video');
+    customVideoElement.loop = true;
+    customVideoElement.muted = true;
+    let lines = [];
+    let lineTimestamps = [];
+    let currentSyncIndex = 0;
+    let animationId = null;
+    let syncAnimationId = null;
+    let logoImg = null;
+    let stars = [];
+
+    for(let i=0; i<50; i++) {
+        stars.push({
+            x: Math.random() * 720,
+            y: Math.random() * 1280,
+            radius: Math.random() * 3,
+            alpha: Math.random()
+        });
+    }
+
+    bgTheme.addEventListener('change', (e) => {
+        if (e.target.value === 'custom') {
+            customVideoSection.classList.remove('hidden');
+        } else {
+            customVideoSection.classList.add('hidden');
+            customVideoElement.pause();
+        }
+    });
+
+    customVideoFile.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            customVideoElement.src = URL.createObjectURL(file);
+            customVideoElement.load();
+        }
+    });
+
+    logoFile.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                logoImg = new Image();
+                logoImg.src = event.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Handle Audio Upload & Decoding for Trimming
+    audioFile.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (audioElement) audioElement.pause();
+
+        const arrayBuffer = await file.arrayBuffer();
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        rawAudioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+        const duration = rawAudioBuffer.duration.toFixed(1);
+        audioDurationText.textContent = `মোট স্থায়িত্ব: ${duration} সেকেন্ড`;
+        trimStart.value = 0;
+        trimEnd.value = duration;
+        trimEnd.max = duration;
+
+        trimSection.classList.remove('hidden');
+        syncStatusText.textContent = 'অডিও আপলোড হয়েছে। চাইলে ট্রিম করুন অথবা সরাসরি সিঙ্ক শুরু করুন।';
+        startSyncBtn.removeAttribute('disabled');
+
+        const wavBlob = bufferToWavBlob(rawAudioBuffer);
+        audioElement = new Audio(URL.createObjectURL(wavBlob));
+        audioElement.crossOrigin = "anonymous";
+    });
+
+    // Apply Audio Trimming
+    applyTrimBtn.addEventListener('click', () => {
+        if (!rawAudioBuffer) return;
+
+        let startSec = parseFloat(trimStart.value) || 0;
+        let endSec = parseFloat(trimEnd.value) || rawAudioBuffer.duration;
+
+        if (startSec < 0) startSec = 0;
+        if (endSec > rawAudioBuffer.duration) endSec = rawAudioBuffer.duration;
+        if (startSec >= endSec) {
+            alert('শেষ সময় শুরু সময় থেকে বেশি হতে হবে!');
+            return;
         }
 
-        bgTheme.addEventListener('change', (e) => {
-            if (e.target.value === 'custom') {
-                customVideoSection.classList.remove('hidden');
-            } else {
-                customVideoSection.classList.add('hidden');
-                customVideoElement.pause();
+        const sampleRate = rawAudioBuffer.sampleRate;
+        const startFrame = Math.floor(startSec * sampleRate);
+        const endFrame = Math.floor(endSec * sampleRate);
+        const frameCount = endFrame - startFrame;
+
+        const trimmedBuffer = audioContext.createBuffer(
+            rawAudioBuffer.numberOfChannels,
+            frameCount,
+            sampleRate
+        );
+
+        for (let channel = 0; channel < rawAudioBuffer.numberOfChannels; channel++) {
+            const sourceData = rawAudioBuffer.getChannelData(channel);
+            const trimmedData = trimmedBuffer.getChannelData(channel);
+            for (let i = 0; i < frameCount; i++) {
+                trimmedData[i] = sourceData[startFrame + i];
             }
-        });
-
-        customVideoFile.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                customVideoElement.src = URL.createObjectURL(file);
-                customVideoElement.load();
-            }
-        });
-
-        logoFile.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    logoImg = new Image();
-                    logoImg.src = event.target.result;
-                }
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Handle Audio Upload & Decoding for Trimming
-        audioFile.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            if (audioElement) audioElement.pause();
-
-            const arrayBuffer = await file.arrayBuffer();
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            rawAudioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-
-            const duration = rawAudioBuffer.duration.toFixed(1);
-            audioDurationText.textContent = `মোট স্থায়িত্ব: ${duration} সেকেন্ড`;
-            trimStart.value = 0;
-            trimEnd.value = duration;
-            trimEnd.max = duration;
-
-            trimSection.classList.remove('hidden');
-            syncStatusText.textContent = 'অডিও আপলোড হয়েছে। চাইলে ট্রিম করুন অথবা সরাসরি সিঙ্ক শুরু করুন।';
-            startSyncBtn.removeAttribute('disabled');
-
-            // Set initial untrimmed audio as default
-            const wavBlob = bufferToWavBlob(rawAudioBuffer);
-            audioElement = new Audio(URL.createObjectURL(wavBlob));
-            audioElement.crossOrigin = "anonymous";
-        });
-
-        // Apply Audio Trimming
-        applyTrimBtn.addEventListener('click', () => {
-            if (!rawAudioBuffer) return;
-
-            let startSec = parseFloat(trimStart.value) || 0;
-            let endSec = parseFloat(trimEnd.value) || rawAudioBuffer.duration;
-
-            if (startSec < 0) startSec = 0;
-            if (endSec > rawAudioBuffer.duration) endSec = rawAudioBuffer.duration;
-            if (startSec >= endSec) {
-                alert('শেষ সময় শুরু সময় থেকে বেশি হতে হবে!');
-                return;
-            }
-
-            const sampleRate = rawAudioBuffer.sampleRate;
-            const startFrame = Math.floor(startSec * sampleRate);
-            const endFrame = Math.floor(endSec * sampleRate);
-            const frameCount = endFrame - startFrame;
-
-            const trimmedBuffer = audioContext.createBuffer(
-                rawAudioBuffer.numberOfChannels,
-                frameCount,
-                sampleRate
-            );
-
-            for (let channel = 0; channel < rawAudioBuffer.numberOfChannels; channel++) {
-                const sourceData = rawAudioBuffer.getChannelData(channel);
-                const trimmedData = trimmedBuffer.getChannelData(channel);
-                for (let i = 0; i < frameCount; i++) {
-                    trimmedData[i] = sourceData[startFrame + i];
-                }
-            }
-
-            const wavBlob = bufferToWavBlob(trimmedBuffer);
-            audioElement = new Audio(URL.createObjectURL(wavBlob));
-            audioElement.crossOrigin = "anonymous";
-
-            alert(`✅ সফলভাবে অডিও ট্রিম করা হয়েছে (${startSec}s থেকে ${endSec}s)!`);
-            startSyncBtn.removeAttribute('disabled');
-        });
-
-        // Helper: Convert AudioBuffer to WAV Blob
-        function bufferToWavBlob(buffer) {
-            const numOfChan = buffer.numberOfChannels;
-            const length = buffer.length * numOfChan * 2 + 44;
-            const out = new DataView(new ArrayBuffer(length));
-            let channels = [];
-            let sampleRate = buffer.sampleRate;
-            let offset = 0;
-            let pos = 0;
-
-            function writeString(str) {
-                for (let i = 0; i < str.length; i++) {
-                    out.setUint8(pos++, str.charCodeAt(i));
-                }
-            }
-
-            writeString('RIFF');
-            out.setUint32(pos, length - 8, true); pos += 4;
-            writeString('WAVE');
-            writeString('fmt ');
-            out.setUint32(pos, 16, true); pos += 4;
-            out.setUint16(pos, 1, true); pos += 2;
-            out.setUint16(pos, numOfChan, true); pos += 2;
-            out.setUint32(pos, sampleRate, true); pos += 4;
-            out.setUint32(pos, sampleRate * 2 * numOfChan, true); pos += 4;
-            out.setUint16(pos, numOfChan * 2, true); pos += 2;
-            out.setUint16(pos, 16, true); pos += 2;
-            writeString('data');
-            out.setUint32(pos, length - pos - 4, true); pos += 4;
-
-            for (let i = 0; i < buffer.numberOfChannels; i++) {
-                channels.push(buffer.getChannelData(i));
-            }
-
-            while (offset < buffer.length) {
-                for (let i = 0; i < numOfChan; i++) {
-                    let sample = Math.max(-1, Math.min(1, channels[i][offset]));
-                    sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0;
-                    out.setInt16(pos, sample, true); pos += 2;
-                }
-                offset++;
-            }
-
-            return new Blob([out.buffer], { type: 'audio/wav' });
         }
 
-        // --- Tap-to-Sync Feature Logic ---
-        startSyncBtn.addEventListener('click', () => {
-            const text = lyricsInput.value.trim();
-            if (!text) {
-                alert('দয়া করে প্রথমে লিরিকস লিখুন!');
-                return;
+        const wavBlob = bufferToWavBlob(trimmedBuffer);
+        audioElement = new Audio(URL.createObjectURL(wavBlob));
+        audioElement.crossOrigin = "anonymous";
+
+        alert(`✅ সফলভাবে অডিও ট্রিম করা হয়েছে (${startSec}s থেকে ${endSec}s)!`);
+        startSyncBtn.removeAttribute('disabled');
+    });
+
+    // Helper: Convert AudioBuffer to WAV Blob
+    function bufferToWavBlob(buffer) {
+        const numOfChan = buffer.numberOfChannels;
+        const length = buffer.length * numOfChan * 2 + 44;
+        const out = new DataView(new ArrayBuffer(length));
+        let channels = [];
+        let sampleRate = buffer.sampleRate;
+        let offset = 0;
+        let pos = 0;
+
+        function writeString(str) {
+            for (let i = 0; i < str.length; i++) {
+                out.setUint8(pos++, str.charCodeAt(i));
             }
-            lines = text.split('\n').filter(l => l.trim() !== '');
-            lineTimestamps = [];
-            currentSyncIndex = 0;
+        }
 
-            audioElement.currentTime = 0;
-            audioElement.play();
-            if (bgTheme.value === 'custom') {
-                customVideoElement.currentTime = 0;
-                customVideoElement.play();
+        writeString('RIFF');
+        out.setUint32(pos, length - 8, true); pos += 4;
+        writeString('WAVE');
+        writeString('fmt ');
+        out.setUint32(pos, 16, true); pos += 4;
+        out.setUint16(pos, 1, true); pos += 2;
+        out.setUint16(pos, numOfChan, true); pos += 2;
+        out.setUint32(pos, sampleRate, true); pos += 4;
+        out.setUint32(pos, sampleRate * 2 * numOfChan, true); pos += 4;
+        out.setUint16(pos, numOfChan * 2, true); pos += 2;
+        out.setUint16(pos, 16, true); pos += 2;
+        writeString('data');
+        out.setUint32(pos, length - pos - 4, true); pos += 4;
+
+        for (let i = 0; i < buffer.numberOfChannels; i++) {
+            channels.push(buffer.getChannelData(i));
+        }
+
+        while (offset < buffer.length) {
+            for (let i = 0; i < numOfChan; i++) {
+                let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+                sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0;
+                out.setInt16(pos, sample, true); pos += 2;
             }
+            offset++;
+        }
 
-            startSyncBtn.classList.add('hidden');
-            tapLineBtn.classList.remove('hidden');
-            syncStatusText.innerHTML = `সঠিক সময়ে ট্যাপ করুন: <strong class="text-pink-400">"${lines[0]}"</strong>`;
-            tapLineBtn.textContent = `১ম লাইনের সময় মার্ক করতে ট্যাপ করুন`;
+        return new Blob([out.buffer], { type: 'audio/wav' });
+    }
 
-            function syncLoop() {
-                if (audioElement.paused || audioElement.ended) return;
-                let currentTime = audioElement.currentTime;
-                let currentText = getActiveLyric(currentTime);
-                drawCanvasContent(bgTheme.value, lyricEffect.value, currentTime, currentText);
-                syncAnimationId = requestAnimationFrame(syncLoop);
+    // Tap-to-Sync Feature Logic
+    startSyncBtn.addEventListener('click', () => {
+        const text = lyricsInput.value.trim();
+        if (!text) {
+            alert('দয়া করে প্রথমে লিরিকস লিখুন!');
+            return;
+        }
+        lines = text.split('\n').filter(l => l.trim() !== '');
+        lineTimestamps = [];
+        currentSyncIndex = 0;
+
+        audioElement.currentTime = 0;
+        audioElement.play();
+        if (bgTheme.value === 'custom') {
+            customVideoElement.currentTime = 0;
+            customVideoElement.play();
+        }
+
+        startSyncBtn.classList.add('hidden');
+        tapLineBtn.classList.remove('hidden');
+        syncStatusText.innerHTML = `সঠিক সময়ে ট্যাপ করুন: <strong class="text-pink-400">"${lines[0]}"</strong>`;
+        tapLineBtn.textContent = `১ম লাইনের সময় মার্ক করতে ট্যাপ করুন`;
+
+        function syncLoop() {
+            if (audioElement.paused || audioElement.ended) return;
+            let currentTime = audioElement.currentTime;
+            let currentText = getActiveLyric(currentTime);
+            drawCanvasContent(bgTheme.value, lyricEffect.value, currentTime, currentText);
+            syncAnimationId = requestAnimationFrame(syncLoop);
+        }
+        syncLoop();
+    });
+
+    tapLineBtn.addEventListener('click', () => {
+        let t = audioElement.currentTime;
+        let adjustedTime = Math.max(0, t - 0.4);
+        lineTimestamps.push(adjustedTime);
+        currentSyncIndex++;
+
+        if (currentSyncIndex < lines.length) {
+            syncStatusText.innerHTML = `পরবর্তী লাইন: <strong class="text-pink-400">"${lines[currentSyncIndex]}"</strong>`;
+            tapLineBtn.textContent = `পরবর্তী লাইনের জন্য ট্যাপ করুন (${currentSyncIndex + 1}/${lines.length})`;
+        } else {
+            audioElement.pause();
+            if (bgTheme.value === 'custom') customVideoElement.pause();
+            cancelAnimationFrame(syncAnimationId);
+            tapLineBtn.classList.add('hidden');
+            startSyncBtn.classList.remove('hidden');
+            startSyncBtn.textContent = '✅ সিঙ্ক সম্পন্ন! পুনরায় সিঙ্ক করুন';
+            syncStatusText.textContent = 'সকল লিরিকের টাইম সফলভাবে সেট হয়েছে!';
+            playPreviewBtn.removeAttribute('disabled');
+            recordBtn.removeAttribute('disabled');
+        }
+    });
+</script>
+<script>
+    function getActiveLyric(currentTime) {
+        if (lineTimestamps.length === 0) return lines[0] || '';
+        let activeIdx = 0;
+        for (let i = 0; i < lineTimestamps.length; i++) {
+            if (currentTime >= lineTimestamps[i]) {
+                activeIdx = i;
             }
-            syncLoop();
-        });
+        }
+        return lines[activeIdx] || '';
+    }
 
-        tapLineBtn.addEventListener('click', () => {
-            let t = audioElement.currentTime;
-            let adjustedTime = Math.max(0, t - 0.4);
-            lineTimestamps.push(adjustedTime);
-            currentSyncIndex++;
+    // Enhanced Text Rendering with New Effects (Word-by-Word & Fade)
+    function wrapTextWithEffect(context, text, x, y, maxWidth, lineHeight, effect, currentTime) {
+        let words = text.split(' ');
+        let line = '';
+        let linesArray = [];
 
-            if (currentSyncIndex < lines.length) {
-                syncStatusText.innerHTML = `পরবর্তী লাইন: <strong class="text-pink-400">"${lines[currentSyncIndex]}"</strong>`;
-                tapLineBtn.textContent = `পরবর্তী লাইনের জন্য ট্যাপ করুন (${currentSyncIndex + 1}/${lines.length})`;
+        for(let n = 0; n < words.length; n++) {
+            let testLine = line + words[n] + ' ';
+            let metrics = context.measureText(testLine);
+            let testWidth = metrics.width;
+            if (testWidth > maxWidth && n > 0) {
+                linesArray.push(line);
+                line = words[n] + ' ';
             } else {
-                audioElement.pause();
-                if (bgTheme.value === 'custom') customVideoElement.pause();
-                cancelAnimationFrame(syncAnimationId);
-                tapLineBtn.classList.add('hidden');
-                startSyncBtn.classList.remove('hidden');
-                startSyncBtn.textContent = '✅ সিঙ্ক সম্পন্ন! পুনরায় সিঙ্ক করুন';
-                syncStatusText.textContent = 'সকল লিরিকের টাইম সফলভাবে সেট হয়েছে!';
-                playPreviewBtn.removeAttribute('disabled');
-                recordBtn.removeAttribute('disabled');
+                line = testLine;
             }
-        });function getActiveLyric(currentTime) {
-            if (lineTimestamps.length === 0) return lines[0] || '';
-            let activeIdx = 0;
+        }
+        linesArray.push(line);
+
+        let startY = y - ((linesArray.length - 1) * lineHeight) / 2;
+
+        context.save();
+
+        // Fade Effect Handling (Opacity Animation)
+        if (effect === 'fadeEffect') {
+            let activeLineIdx = 0;
             for (let i = 0; i < lineTimestamps.length; i++) {
-                if (currentTime >= lineTimestamps[i]) {
-                    activeIdx = i;
-                }
+                if (currentTime >= lineTimestamps[i]) activeLineIdx = i;
             }
-            return lines[activeIdx] || '';
+            let lineStartTime = lineTimestamps[activeLineIdx] || 0;
+            let timeSinceStart = currentTime - lineStartTime;
+            let alpha = Math.min(1, timeSinceStart * 2.5); // Fade in over 0.4s
+            context.globalAlpha = alpha;
         }
 
-        function wrapTextWithEffect(context, text, x, y, maxWidth, lineHeight, effect) {
-            let words = text.split(' ');
-            let line = '';
-            let linesArray = [];
+        if (effect === 'neon') {
+            context.shadowColor = '#ec4899';
+            context.shadowBlur = 25;
+            context.fillStyle = '#f472b6';
+        } else if (effect === 'gradientText') {
+            let grad = context.createLinearGradient(x - 200, startY, x + 200, startY + lineHeight);
+            grad.addColorStop(0, '#ec4899');
+            grad.addColorStop(0.5, '#a855f7');
+            grad.addColorStop(1, '#3b82f6');
+            context.fillStyle = grad;
+            context.shadowColor = 'rgba(0, 0, 0, 0.8)';
+            context.shadowBlur = 10;
+        } else if (effect === 'bounce') {
+            context.fillStyle = '#ffffff';
+            context.shadowColor = '#9333ea';
+            context.shadowBlur = 20;
+        } else {
+            context.fillStyle = '#ffffff';
+            context.shadowColor = 'rgba(0, 0, 0, 0.9)';
+            context.shadowBlur = 15;
+        }
 
-            for(let n = 0; n < words.length; n++) {
-                let testLine = line + words[n] + ' ';
-                let metrics = context.measureText(testLine);
-                let testWidth = metrics.width;
-                if (testWidth > maxWidth && n > 0) {
-                    linesArray.push(line);
-                    line = words[n] + ' ';
-                } else {
-                    line = testLine;
-                }
+        // Word-by-Word (Karaoke) Effect Handling
+        if (effect === 'wordByWord') {
+            let activeLineIdx = 0;
+            for (let i = 0; i < lineTimestamps.length; i++) {
+                if (currentTime >= lineTimestamps[i]) activeLineIdx = i;
             }
-            linesArray.push(line);
+            let lineStartTime = lineTimestamps[activeLineIdx] || 0;
+            let lineEndTime = lineTimestamps[activeLineIdx + 1] || (lineStartTime + 3);
+            let lineDuration = lineEndTime - lineStartTime;
+            let timePassed = currentTime - lineStartTime;
+            let totalWords = words.length;
+            let wordsToShow = Math.floor((timePassed / lineDuration) * totalWords);
+            wordsToShow = Math.max(1, Math.min(totalWords, wordsToShow));
 
-            let startY = y - ((linesArray.length - 1) * lineHeight) / 2;
-
-            context.save();
-            if (effect === 'neon') {
-                context.shadowColor = '#ec4899';
-                context.shadowBlur = 25;
-                context.fillStyle = '#f472b6';
-            } else if (effect === 'gradientText') {
-                let grad = context.createLinearGradient(x - 200, startY, x + 200, startY + lineHeight);
-                grad.addColorStop(0, '#ec4899');
-                grad.addColorStop(0.5, '#a855f7');
-                grad.addColorStop(1, '#3b82f6');
-                context.fillStyle = grad;
-                context.shadowColor = 'rgba(0, 0, 0, 0.8)';
-                context.shadowBlur = 10;
-            } else if (effect === 'bounce') {
-                context.fillStyle = '#ffffff';
-                context.shadowColor = '#9333ea';
-                context.shadowBlur = 20;
-            } else {
-                context.fillStyle = '#ffffff';
-                context.shadowColor = 'rgba(0, 0, 0, 0.9)';
-                context.shadowBlur = 15;
-            }
-
+            let currentRenderText = words.slice(0, wordsToShow).join(' ');
+            context.fillText(currentRenderText, x, startY);
+        } else {
             for(let k = 0; k < linesArray.length; k++) {
                 context.fillText(linesArray[k], x, startY + (k * lineHeight));
             }
-            context.restore();
         }
+        context.restore();
+    }
 
-        function drawCanvasContent(theme, effect, progress, currentText) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function drawCanvasContent(theme, effect, progress, currentText) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            if (theme === 'custom' && customVideoElement.readyState >= 2) {
-                ctx.save();
-                if (autoZoomCheck.checked) {
-                    let scale = 1.15;
-                    ctx.translate(canvas.width / 2, canvas.height / 2);
-                    ctx.scale(scale, scale);
-                    ctx.translate(-canvas.width / 2, -canvas.height / 2);
-                }
-                ctx.drawImage(customVideoElement, 0, 0, canvas.width, canvas.height);
-                ctx.restore();
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            } else if (theme === 'starry') {
-                ctx.fillStyle = '#09090b';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#ffffff';
-                stars.forEach(star => {
-                    ctx.globalAlpha = Math.abs(Math.sin(progress + star.alpha));
-                    ctx.beginPath();
-                    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-                    ctx.fill();
-                });
-                ctx.globalAlpha = 1.0;
-            } else {
-                let grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-                if (theme === 'gradient1') {
-                    grad.addColorStop(0, '#3b0764');
-                    grad.addColorStop(1, '#0f172a');
-                } else {
-                    grad.addColorStop(0, '#831843');
-                    grad.addColorStop(1, '#311026');
-                }
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
-                ctx.beginPath();
-                ctx.arc(canvas.width / 2, canvas.height / 2, 350 + Math.sin(progress) * 40, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            // Branding Watermark
-            const padding = 40;
-            const pageName = pageNameInput.value || 'Only Voice';
-
+        if (theme === 'custom' && customVideoElement.readyState >= 2) {
             ctx.save();
-            ctx.font = 'bold 28px sans-serif';
-            let textWidth = ctx.measureText(pageName).width;
-            let pillWidth = textWidth + 80;
-            let pillHeight = 60;
-            let pillX = padding;
-            let pillY = padding;
-
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-            ctx.beginPath();
-            ctx.roundRect(pillX, pillY, pillWidth, pillHeight, 30);
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            if (logoImg && logoImg.complete) {
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(pillX + 30, pillY + 30, 20, 0, Math.PI * 2);
-                ctx.clip();
-                ctx.drawImage(logoImg, pillX + 10, pillY + 10, 40, 40);
-                ctx.restore();
-            } else {
-                ctx.fillStyle = '#ec4899';
-                ctx.beginPath();
-                ctx.arc(pillX + 30, pillY + 30, 12, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            ctx.fillStyle = '#ffffff';
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(pageName, pillX + 65, pillY + 31);
-            ctx.restore();
-
-            // Draw Lyrics
-            ctx.save();
-            ctx.font = 'bold 45px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-
-            let renderX = canvas.width / 2;
-            let renderY = canvas.height / 2;
-
-            if (effect === 'bounce') {
-                let scale = 1 + Math.sin(progress * 8) * 0.04;
-                ctx.translate(renderX, renderY);
+            if (autoZoomCheck.checked) {
+                let scale = 1.15;
+                ctx.translate(canvas.width / 2, canvas.height / 2);
                 ctx.scale(scale, scale);
-                ctx.translate(-renderX, -renderY);
+                ctx.translate(-canvas.width / 2, -canvas.height / 2);
             }
-
-            wrapTextWithEffect(ctx, currentText, renderX, renderY, canvas.width - 120, 65, effect);
+            ctx.drawImage(customVideoElement, 0, 0, canvas.width, canvas.height);
             ctx.restore();
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (theme === 'starry') {
+            ctx.fillStyle = '#09090b';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+            stars.forEach(star => {
+                ctx.globalAlpha = Math.abs(Math.sin(progress + star.alpha));
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1.0;
+        } else {
+            let grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            if (theme === 'gradient1') {
+                grad.addColorStop(0, '#3b0764');
+                grad.addColorStop(1, '#0f172a');
+            } else {
+                grad.addColorStop(0, '#831843');
+                grad.addColorStop(1, '#311026');
+            }
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, 350 + Math.sin(progress) * 40, 0, Math.PI * 2);
+            ctx.fill();
         }
 
-        playPreviewBtn.addEventListener('click', () => {
-            if (!audioElement) return;
+        // Branding Watermark
+        const padding = 40;
+        const pageName = pageNameInput.value || 'Only Voice';
 
-            audioElement.currentTime = 0;
-            audioElement.play();
-            if (bgTheme.value === 'custom') {
-                customVideoElement.currentTime = 0;
-                customVideoElement.play();
-            }
+        ctx.save();
+        ctx.font = 'bold 28px sans-serif';
+        let textWidth = ctx.measureText(pageName).width;
+        let pillWidth = textWidth + 80;
+        let pillHeight = 60;
+        let pillX = padding;
+        let pillY = padding;
 
-            function updateCanvas() {
-                if (audioElement.ended) {
-                    cancelAnimationFrame(animationId);
-                    if (bgTheme.value === 'custom') customVideoElement.pause();
-                    playPreviewBtn.textContent = '▶ প্রিভিউ দেখুন ও শুনুন';
-                    return;
-                }
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.beginPath();
+        ctx.roundRect(pillX, pillY, pillWidth, pillHeight, 30);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
 
-                let currentTime = audioElement.currentTime;
-                let currentText = getActiveLyric(currentTime);
-
-                drawCanvasContent(bgTheme.value, lyricEffect.value, currentTime, currentText);
-                animationId = requestAnimationFrame(updateCanvas);
-            }
-
-            playPreviewBtn.textContent = '⏸ প্লে হচ্ছে...';
-            updateCanvas();
-        });
-
-        // Video Recording & Download
-        let mediaRecorder;
-        let recordedChunks = [];
-
-        recordBtn.addEventListener('click', () => {
-            if (!audioElement) return;
-
-            audioElement.currentTime = 0;
-            audioElement.play();
-            if (bgTheme.value === 'custom') {
-                customVideoElement.currentTime = 0;
-                customVideoElement.play();
-            }
-
-            const canvasStream = canvas.captureStream(30);
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const source = audioCtx.createMediaElementSource(audioElement);
-            const destination = audioCtx.createMediaStreamDestination();
-            source.connect(destination);
-            source.connect(audioCtx.destination);
-
-            const combinedStream = new MediaStream([
-                ...canvasStream.getVideoTracks(),
-                ...destination.stream.getAudioTracks()
-            ]);
-
-            recordedChunks = [];
-            mediaRecorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm;codecs=vp9' });
-
-            mediaRecorder.ondataavailable = function(e) {
-                if (e.data.size > 0) recordedChunks.push(e.data);
-            };
-
-            mediaRecorder.onstop = function() {
-                const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'only-voice-synced-video.webm';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-
-                recordBtn.textContent = '🔴 ভিডিও রেকর্ড ও ডাউনলোড করুন';
-                recordBtn.removeAttribute('disabled');
-                stopContainer.classList.add('hidden');
-            };
-
-            mediaRecorder.start();
-            recordBtn.textContent = '⏳ রেকর্ডিং চলছে...';
-            recordBtn.setAttribute('disabled', 'true');
-            stopContainer.classList.remove('hidden');
-
-            function recordLoop() {
-                if (audioElement.ended) {
-                    stopRecordingProcess();
-                    return;
-                }
-
-                let currentTime = audioElement.currentTime;
-                let currentText = getActiveLyric(currentTime);
-
-                drawCanvasContent(bgTheme.value, lyricEffect.value, currentTime, currentText);
-                animationId = requestAnimationFrame(recordLoop);
-            }
-
-            recordLoop();
-        });
-
-        function stopRecordingProcess() {
-            if (audioElement) audioElement.pause();
-            if (bgTheme.value === 'custom') customVideoElement.pause();
-            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                mediaRecorder.stop();
-            }
-            cancelAnimationFrame(animationId);
+        if (logoImg && logoImg.complete) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(pillX + 30, pillY + 30, 20, 0, Math.PI * 2);
+            ctx.clip();
+            ctx.drawImage(logoImg, pillX + 10, pillY + 10, 40, 40);
+            ctx.restore();
+        } else {
+            ctx.fillStyle = '#ec4899';
+            ctx.beginPath();
+            ctx.arc(pillX + 30, pillY + 30, 12, 0, Math.PI * 2);
+            ctx.fill();
         }
 
-        stopRecordBtn.addEventListener('click', () => {
-            stopRecordingProcess();
-        });
-    </script>
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(pageName, pillX + 65, pillY + 31);
+        ctx.restore();
+
+        // Draw Lyrics
+        ctx.save();
+        ctx.font = 'bold 45px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        let renderX = canvas.width / 2;
+        let renderY = canvas.height / 2;
+
+        if (effect === 'bounce') {
+            let scale = 1 + Math.sin(progress * 8) * 0.04;
+            ctx.translate(renderX, renderY);
+            ctx.scale(scale, scale);
+            ctx.translate(-renderX, -renderY);
+        }
+
+        wrapTextWithEffect(ctx, currentText, renderX, renderY, canvas.width - 120, 65, effect, progress);
+        ctx.restore();
+    }
+
+    playPreviewBtn.addEventListener('click', () => {
+        if (!audioElement) return;
+
+        audioElement.currentTime = 0;
+        audioElement.play();
+        if (bgTheme.value === 'custom') {
+            customVideoElement.currentTime = 0;
+            customVideoElement.play();
+        }
+
+        function updateCanvas() {
+            if (audioElement.ended) {
+                cancelAnimationFrame(animationId);
+                if (bgTheme.value === 'custom') customVideoElement.pause();
+                playPreviewBtn.textContent = '▶ প্রিভিউ দেখুন ও শুনুন';
+                return;
+            }
+
+            let currentTime = audioElement.currentTime;
+            let currentText = getActiveLyric(currentTime);
+
+            drawCanvasContent(bgTheme.value, lyricEffect.value, currentTime, currentText);
+            animationId = requestAnimationFrame(updateCanvas);
+        }
+
+        playPreviewBtn.textContent = '⏸ প্লে হচ্ছে...';
+        updateCanvas();
+    });
+
+    // Video Recording & Download
+    let mediaRecorder;
+    let recordedChunks = [];
+
+    recordBtn.addEventListener('click', () => {
+        if (!audioElement) return;
+
+        audioElement.currentTime = 0;
+        audioElement.play();
+        if (bgTheme.value === 'custom') {
+            customVideoElement.currentTime = 0;
+            customVideoElement.play();
+        }
+
+        const canvasStream = canvas.captureStream(30);
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioCtx.createMediaElementSource(audioElement);
+        const destination = audioCtx.createMediaStreamDestination();
+        source.connect(destination);
+        source.connect(audioCtx.destination);
+
+        const combinedStream = new MediaStream([
+            ...canvasStream.getVideoTracks(),
+            ...destination.stream.getAudioTracks()
+        ]);
+
+        recordedChunks = [];
+        mediaRecorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm;codecs=vp9' });
+
+        mediaRecorder.ondataavailable = function(e) {
+            if (e.data.size > 0) recordedChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = function() {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'only-voice-synced-video.webm';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            recordBtn.textContent = '🔴 ভিডিও রেকর্ড ও ডাউনলোড করুন';
+            recordBtn.removeAttribute('disabled');
+            stopContainer.classList.add('hidden');
+        };
+
+        mediaRecorder.start();
+        recordBtn.textContent = '⏳ রেকর্ডিং চলছে...';
+        recordBtn.setAttribute('disabled', 'true');
+        stopContainer.classList.remove('hidden');
+
+        function recordLoop() {
+            if (audioElement.ended) {
+                stopRecordingProcess();
+                return;
+            }
+
+            let currentTime = audioElement.currentTime;
+            let currentText = getActiveLyric(currentTime);
+
+            drawCanvasContent(bgTheme.value, lyricEffect.value, currentTime, currentText);
+            animationId = requestAnimationFrame(recordLoop);
+        }
+
+        recordLoop();
+    });
+
+    function stopRecordingProcess() {
+        if (audioElement) audioElement.pause();
+        if (bgTheme.value === 'custom') customVideoElement.pause();
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+        }
+        cancelAnimationFrame(animationId);
+    }
+
+    stopRecordBtn.addEventListener('click', () => {
+        stopRecordingProcess();
+    });
+</script>
 </body>
 </html>
