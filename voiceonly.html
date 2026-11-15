@@ -138,6 +138,7 @@
         let lineTimestamps = [];
         let currentSyncIndex = 0;
         let animationId = null;
+        let syncAnimationId = null;
         let logoImg = null;
         let stars = [];
 
@@ -192,7 +193,7 @@
             }
         });
 
-        // --- Tap-to-Sync Feature Logic with 0.3s delay correction ---
+        // --- Tap-to-Sync Feature Logic with Live Canvas Preview ---
         startSyncBtn.addEventListener('click', () => {
             const text = lyricsInput.value.trim();
             if (!text) {
@@ -214,12 +215,22 @@
             tapLineBtn.classList.remove('hidden');
             syncStatusText.innerHTML = `সঠিক সময়ে ট্যাপ করুন: <strong class="text-pink-400">"${lines[0]}"</strong>`;
             tapLineBtn.textContent = `১ম লাইনের সময় মার্ক করতে ট্যাপ করুন`;
+
+            // Start live canvas preview loop during syncing
+            function syncLoop() {
+                if (audioElement.paused || audioElement.ended) return;
+                let currentTime = audioElement.currentTime;
+                let currentText = getActiveLyric(currentTime);
+                drawCanvasContent(bgTheme.value, currentTime, currentText);
+                syncAnimationId = requestAnimationFrame(syncLoop);
+            }
+            syncLoop();
         });
 
         tapLineBtn.addEventListener('click', () => {
             let t = audioElement.currentTime;
-            // মানুষের রিঅ্যাকশন ডিলে অ্যাডজাস্ট করার জন্য ০.৩ সেকেন্ড মাইনাস করা হলো
-            let adjustedTime = Math.max(0, t - 0.3);
+            // রিঅ্যাকশন ডিলে ও সঠিক সময়ে লিরিক আসার জন্য ০.৪ সেকেন্ড আগে অ্যাডজাস্ট করা হলো
+            let adjustedTime = Math.max(0, t - 0.4);
             lineTimestamps.push(adjustedTime);
             currentSyncIndex++;
 
@@ -229,6 +240,7 @@
             } else {
                 audioElement.pause();
                 if (bgTheme.value === 'custom') customVideoElement.pause();
+                cancelAnimationFrame(syncAnimationId);
                 tapLineBtn.classList.add('hidden');
                 startSyncBtn.classList.remove('hidden');
                 startSyncBtn.textContent = '✅ সিঙ্ক সম্পন্ন! পুনরায় সিঙ্ক করুন';
@@ -424,6 +436,7 @@
             mediaRecorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm;codecs=vp9' });
 
             mediaRecorder.ondataavailable = function(e) {
+                if (e.data.size > 0) recordedChunks.data = recordedChunks.push(e.data); // safe push
                 if (e.data.size > 0) recordedChunks.push(e.data);
             };
 
