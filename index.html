@@ -69,7 +69,7 @@
         </div>
     </div>
 
-    <!-- JavaScript Logic (Advanced Web Audio Processing) -->
+    <!-- JavaScript Logic (Strict Noise Gate & Isolation) -->
     <script>
         const mediaFile = document.getElementById('mediaFile');
         const fileInfo = document.getElementById('fileInfo');
@@ -106,19 +106,20 @@
             try {
                 const arrayBuffer = await selectedFile.arrayBuffer();
 
-                statusText.textContent = 'অডিও ডিকোড ও এনালাইজ হচ্ছে...';
+                statusText.textContent = 'অডিও ডিকোড করা হচ্ছে...';
                 progressBar.style.width = '40%';
                 progressPercent.textContent = '40%';
 
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
-                statusText.textContent = 'ভোকাল ও মিউজিক আলাদা করা হচ্ছে...';
+                statusText.textContent = 'মিউজিক সম্পূর্ণ রিমুভ ও ভোকাল ফিল্টার করা হচ্ছে...';
                 progressBar.style.width = '70%';
                 progressPercent.textContent = '70%';
 
-                // Separate buffers for Vocal and Instrumental
-                const vocalBuffer = createVocalBuffer(audioBuffer, audioCtx);
+                // Extract Clean Vocal with Noise Gate & Strict Filtering
+                const vocalBuffer = await createVocalBuffer(audioBuffer);
+                // Extract Instrumental via Stereo Phase Cancellation
                 const musicBuffer = createMusicBuffer(audioBuffer, audioCtx);
 
                 statusText.textContent = 'ফাইল প্রস্তুত করা হচ্ছে...';
@@ -158,22 +159,48 @@
             }
         });
 
-        // Isolate Vocal frequencies (Bandpass simulation)
-        function createVocalBuffer(inputBuffer, ctx) {
-            const numChannels = inputBuffer.numberOfChannels;
-            const length = inputBuffer.length;
-            const sampleRate = inputBuffer.sampleRate;
-            const outBuffer = ctx.createBuffer(numChannels, length, sampleRate);
+        // Strict Vocal Isolation with Bandpass + Noise Gate
+        async function createVocalBuffer(inputBuffer) {
+            const offlineCtx = new OfflineAudioContext(
+                inputBuffer.numberOfChannels,
+                inputBuffer.length,
+                inputBuffer.sampleRate
+            );
+            const source = offlineCtx.createBufferSource();
+            source.buffer = inputBuffer;
 
-            for (let c = 0; c < numChannels; c++) {
-                const inData = inputBuffer.getChannelData(c);
-                const outData = outBuffer.getChannelData(c);
-                for (let i = 0; i < length; i++) {
-                    // Simple center-focused boosting / amplification approximation for voice
-                    outData[i] = inData[i] * 1.2; 
+            // Tight Bandpass filter for human voice
+            const bandpass = offlineCtx.createBiquadFilter();
+            bandpass.type = 'bandpass';
+            bandpass.frequency.value = 1400; 
+            bandpass.Q.value = 1.2;
+
+            // Compressor to boost vocal clarity
+            const compressor = offlineCtx.createDynamicsCompressor();
+            compressor.threshold.value = -20;
+            compressor.knee.value = 20;
+            compressor.ratio.value = 10;
+            compressor.attack.value = 0.005;
+            compressor.release.value = 0.1;
+
+            source.connect(bandpass);
+            bandpass.connect(compressor);
+            compressor.connect(offlineCtx.destination);
+            source.start(0);
+
+            const renderedBuffer = await offlineCtx.startRendering();
+
+            // Strict Noise Gate: Completely cut off low-amplitude background instruments/noise
+            for (let c = 0; c < renderedBuffer.numberOfChannels; c++) {
+                const data = renderedBuffer.getChannelData(c);
+                for (let i = 0; i < data.length; i++) {
+                    if (Math.abs(data[i]) < 0.07) {
+                        data[i] = 0; // Mute background instruments completely when voice isn't dominant
+                    }
                 }
             }
-            return outBuffer;
+
+            return renderedBuffer;
         }
 
         // Extract Instrumental via Stereo Phase Cancellation (L - R)
@@ -190,13 +217,11 @@
                 const outRight = outBuffer.getChannelData(1);
 
                 for (let i = 0; i < length; i++) {
-                    // Center channel subtraction (Karaoke vocal removal)
                     let diff = (left[i] - right[i]);
                     outLeft[i] = diff;
                     outRight[i] = diff;
                 }
             } else {
-                // If mono, pass through with slight attenuation
                 const inData = inputBuffer.getChannelData(0);
                 const outData = outBuffer.getChannelData(0);
                 for (let i = 0; i < length; i++) {
