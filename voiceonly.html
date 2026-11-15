@@ -27,33 +27,34 @@
             </div>
         </div>
 
-        <!-- Step 1: Audio, Background & Effect Selection -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div>
-                <label class="block text-xs font-semibold text-gray-300 mb-2">অডিও ফাইল (Vocal MP3):</label>
-                <input type="file" id="audioFile" accept="audio/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-300 mb-2">ব্যাকগ্রাউন্ড ডিজাইন:</label>
-                <select id="bgTheme" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-purple-500">
-                    <option value="gradient1">রয়্যাল পার্পল গ্রেডিয়েন্ট</option>
-                    <option value="starry">তারাভরা রাত ও পার্টিকলস</option>
-                    <option value="sunset">ইমোশনাল সানসেট</option>
-                    <option value="custom">🎥 কাস্টম ভিডিও ব্যাকগ্রাউন্ড</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-300 mb-2">লিরিক টেক্সট ইফেক্ট:</label>
-                <select id="lyricEffect" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-purple-500">
-                    <option value="standard">✨ ক্লাসিক গ্লো ও শ্যাডো</option>
-                    <option value="neon">💡 নিয়ন গ্লো (Neon Glow)</option>
-                    <option value="bounce">🔥 বাউন্সি পপ-আপ (Reels Style)</option>
-                    <option value="gradientText">🌈 কালারফুল গ্রেডিয়েন্ট টেক্সট</option>
-                    <option value="wordByWord">🎤 ওয়ার্ড-বাই-ওয়ার্ড (Karaoke Style)</option>
-                    <option value="fadeEffect">🌫️ স্মুথ ফেড ইন-আউট (Fade Effect)</option>
-                </select>
-            </div>
-        </div>
+       <!-- Step 1: Audio/Video & Effect Selection -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div>
+        <label class="block text-xs font-semibold text-gray-300 mb-2">অডিও বা ভিডিও ফাইল (MP3/MP4):</label>
+        <input type="file" id="audioFile" accept="audio/*,video/*" class="w-full text-xs text-gray-400 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer">
+    </div>
+    <div>
+        <label class="block text-xs font-semibold text-gray-300 mb-2">ব্যাকগ্রাউন্ড ডিজাইন:</label>
+        <select id="bgTheme" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-purple-500">
+            <option value="gradient1">রয়্যাল পার্পল গ্রেডিয়েন্ট</option>
+            <option value="starry">তারাভরা রাত ও পার্টিকলস</option>
+            <option value="sunset">ইমোশনাল সানসেট</option>
+            <option value="custom">🎥 কাস্টম ভিডিও ব্যাকগ্রাউন্ড</option>
+        </select>
+    </div>
+    <div>
+        <label class="block text-xs font-semibold text-gray-300 mb-2">লিরিক টেক্সট ইফেক্ট:</label>
+        <select id="lyricEffect" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-purple-500">
+            <option value="standard">✨ ক্লাসিক গ্লো ও শ্যাডো</option>
+            <option value="neon">💡 নিয়ন গ্লো (Neon Glow)</option>
+            <option value="bounce">🔥 বাউন্সি পপ-আপ (Reels Style)</option>
+            <option value="gradientText">🌈 কালারফুল গ্রেডিয়েন্ট টেক্সট</option>
+            <option value="wordByWord">🎤 ওয়ার্ড-বাই-ওয়ার্ড (Karaoke Style)</option>
+            <option value="fadeEffect">🌫️ স্মুথ ফেড ইন-আউট (Fade Effect)</option>
+        </select>
+    </div>
+</div>
+
 
         <!-- Audio Trimming Section -->
         <div id="trimSection" class="hidden bg-slate-900/50 p-4 rounded-xl border border-slate-800 space-y-3">
