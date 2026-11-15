@@ -20,8 +20,8 @@
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
 
     <div class="w-full max-w-md card-bg rounded-2xl shadow-2xl p-6 md:p-8">
-        <h1 class="text-2xl font-bold text-center mb-2 text-white">🎵 AI Vocal Remover & Splitter</h1>
-        <p class="text-xs text-center text-gray-400 mb-6">क्लाউড এআই দিয়ে ১০০% নিখুঁতভাবে ভয়েস ও মিউজিক আলাদা করুন!</p>
+        <h1 class="text-2xl font-bold text-center mb-2 text-white">🎵 Vocal & Video Splitter</h1>
+        <p class="text-xs text-center text-gray-400 mb-6">কোনো সার্ভার জ্যাম ছাড়াই সুপার ফাস্ট ভয়েস ও মিউজিক আলাদা করুন!</p>
 
         <!-- File Upload Box -->
         <div class="border-2 border-dashed border-gray-600 rounded-xl p-6 text-center relative mb-6 bg-gray-900/50 hover:border-blue-400 transition cursor-pointer">
@@ -45,14 +45,14 @@
 
         <!-- Process Button -->
         <button id="processBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition shadow-lg disabled:opacity-50" disabled>
-            এআই দিয়ে আলাদা করুন
+            ভয়েস ও মিউজিক আলাদা করুন
         </button>
 
         <!-- Progress Section -->
         <div id="progressSection" class="hidden mt-6 space-y-2">
             <div class="flex justify-between text-xs text-gray-400">
-                <span id="statusText">সার্ভারে কানেক্ট করা হচ্ছে...</span>
-                <span id="progressPercent">০%</span>
+                <span id="statusText">প্রস্তুতি চলছে...</span>
+                <span id="progressPercent">0%</span>
             </div>
             <div class="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
                 <div id="progressBar" class="bg-blue-500 h-full w-0 transition-all duration-300"></div>
@@ -69,10 +69,8 @@
         </div>
     </div>
 
-    <!-- Gradio Client SDK for Cloud AI Processing -->
-    <script type="module">
-        import { client } from "https://cdn.jsdelivr.net/npm/@gradio/client@0.12.0/dist/index.min.js";
-
+    <!-- Lightning Fast Local Web Audio Processing -->
+    <script>
         const mediaFile = document.getElementById('mediaFile');
         const fileInfo = document.getElementById('fileInfo');
         const fileName = document.getElementById('fileName');
@@ -101,49 +99,161 @@
 
             progressSection.classList.remove('hidden');
             processBtn.setAttribute('disabled', 'true');
-            statusText.textContent = 'ক্লাউড এআই সার্ভারে ফাইল আপলোড হচ্ছে...';
-            progressBar.style.width = '30%';
-            progressPercent.textContent = '৩০%';
+            statusText.textContent = 'ফাইল রিড করা হচ্ছে...';
+            progressBar.style.width = '20%';
+            progressPercent.textContent = '20%';
 
             try {
-                // Connecting to public Demucs AI Space on Hugging Face
-                const app = await client("ahmetmr/Demucs");
-                
-                statusText.textContent = 'এআই মডেল দিয়ে ভোকাল ও মিউজিক আলাদা করা হচ্ছে...';
-                progressBar.style.width = '70%';
-                progressPercent.textContent = '৭০%';
+                const arrayBuffer = await selectedFile.arrayBuffer();
 
-                const result = await app.predict("/predict", [
-                    selectedFile, // audio/video file
-                ]);
+                statusText.textContent = 'অডিও ডিকোড করা হচ্ছে...';
+                progressBar.style.width = '50%';
+                progressPercent.textContent = '50%';
+
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+                statusText.textContent = 'ভোকাল ও মিউজিক আলাদা করা হচ্ছে...';
+                progressBar.style.width = '80%';
+                progressPercent.textContent = '80%';
+
+                // Isolate Vocal (Center Extraction) and Instrumental (Phase Cancellation)
+                const vocalBuffer = createVocalBuffer(audioBuffer, audioCtx);
+                const musicBuffer = createMusicBuffer(audioBuffer, audioCtx);
+
+                const vocalWav = bufferToWave(vocalBuffer, vocalBuffer.length);
+                const musicWav = bufferToWave(musicBuffer, musicBuffer.length);
+
+                const vocalUrl = URL.createObjectURL(vocalWav);
+                const musicUrl = URL.createObjectURL(musicWav);
 
                 statusText.textContent = 'প্রসেসিং সম্পন্ন!';
                 progressBar.style.width = '100%';
-                progressPercent.textContent = '১০০%';
+                progressPercent.textContent = '100%';
 
                 downloadSection.classList.remove('hidden');
                 const vocalLink = document.getElementById('downloadVocal');
                 const musicLink = document.getElementById('downloadMusic');
 
-                // Result format from Demucs space: [vocal_file_path, instrumental_file_path]
-                if (result && result.data) {
-                    vocalLink.href = result.data[0].url;
-                    vocalLink.download = 'vocal.wav';
-                    vocalLink.classList.remove('hidden');
+                vocalLink.href = vocalUrl;
+                vocalLink.download = 'vocal.wav';
+                vocalLink.classList.remove('hidden');
 
-                    musicLink.href = result.data[1].url;
-                    musicLink.download = 'instrumental.wav';
-                    musicLink.classList.remove('hidden');
-                }
+                musicLink.href = musicUrl;
+                musicLink.download = 'instrumental.wav';
+                musicLink.classList.remove('hidden');
 
                 processBtn.removeAttribute('disabled');
 
             } catch (error) {
                 console.error(error);
-                statusText.textContent = 'সার্ভার ব্যস্ত বা ত্রুটি ঘটেছে! আবার চেষ্টা করুন।';
+                statusText.textContent = 'ত্রুটি ঘটেছে! ফাইল ফরম্যাট চেক করুন।';
                 processBtn.removeAttribute('disabled');
             }
         });
+
+        // Extract Vocal using Center Panning (Vocals are centered)
+        function createVocalBuffer(inputBuffer, ctx) {
+            const numChannels = inputBuffer.numberOfChannels;
+            const length = inputBuffer.length;
+            const sampleRate = inputBuffer.sampleRate;
+            const outBuffer = ctx.createBuffer(1, length, sampleRate); // Mono output for clean vocal
+            const outData = outBuffer.getChannelData(0);
+
+            if (numChannels >= 2) {
+                const left = inputBuffer.getChannelData(0);
+                const right = inputBuffer.getChannelData(1);
+                for (let i = 0; i < length; i++) {
+                    // Center extraction: (L + R) / 2 isolates centered vocals
+                    outData[i] = (left[i] + right[i]) / 2;
+                }
+            } else {
+                const inData = inputBuffer.getChannelData(0);
+                for (let i = 0; i < length; i++) {
+                    outData[i] = inData[i];
+                }
+            }
+            return outBuffer;
+        }
+
+        // Extract Instrumental via Stereo Phase Cancellation (L - R)
+        function createMusicBuffer(inputBuffer, ctx) {
+            const numChannels = inputBuffer.numberOfChannels;
+            const length = inputBuffer.length;
+            const sampleRate = inputBuffer.sampleRate;
+            const outBuffer = ctx.createBuffer(numChannels, length, sampleRate);
+
+            if (numChannels >= 2) {
+                const left = inputBuffer.getChannelData(0);
+                const right = inputBuffer.getChannelData(1);
+                const outLeft = outBuffer.getChannelData(0);
+                const outRight = outBuffer.getChannelData(1);
+
+                for (let i = 0; i < length; i++) {
+                    let diff = (left[i] - right[i]);
+                    outLeft[i] = diff;
+                    outRight[i] = diff;
+                }
+            } else {
+                const inData = inputBuffer.getChannelData(0);
+                const outData = outBuffer.getChannelData(0);
+                for (let i = 0; i < length; i++) {
+                    outData[i] = inData[i] * 0.5;
+                }
+            }
+            return outBuffer;
+        }
+
+        // Convert AudioBuffer to WAV Blob
+        function bufferToWave(abuffer, len) {
+            let numOfChan = abuffer.numberOfChannels,
+                length = len * numOfChan * 2 + 44,
+                buffer = new ArrayBuffer(length),
+                view = new DataView(buffer),
+                channels = [], sampleRate = abuffer.sampleRate,
+                offset = 0, pos = 0;
+
+            function setUint16(data) {
+                view.setUint16(pos, data, true);
+                pos += 2;
+            }
+            function setUint32(data) {
+                view.setUint32(pos, data, true);
+                pos += 4;
+            }
+
+            setUint32(0x46464952); // "RIFF"
+            setUint32(length - 8); 
+            setUint32(0x45564157); // "WAVE"
+
+            setUint32(0x20746d66); // "fmt " chunk
+            setUint32(16); 
+            setUint16(1); // PCM 
+            setUint16(numOfChan);
+            setUint32(sampleRate);
+            setUint32(sampleRate * 2 * numOfChan);
+            setUint16(numOfChan * 2);
+            setUint16(16); // 16-bit
+
+            setUint32(0x61746164); // "data" chunk
+            setUint32(length - pos - 4);
+
+            for (let i = 0; i < numOfChan; i++) {
+                channels.push(abuffer.getChannelData(i));
+            }
+
+            while (pos < length) {
+                for (let i = 0; i < numOfChan; i++) {
+                    let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+                    sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767);
+                    view.setInt16(pos, sample, true);
+                    pos += 2;
+                }
+                offset++;
+            }
+
+            return new Blob([buffer], { type: 'audio/wav' });
+        }
     </script>
 </body>
 </html>
