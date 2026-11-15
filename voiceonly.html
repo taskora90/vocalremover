@@ -192,7 +192,7 @@
             }
         });
 
-        // --- Tap-to-Sync Feature Logic ---
+        // --- Tap-to-Sync Feature Logic with 0.3s delay correction ---
         startSyncBtn.addEventListener('click', () => {
             const text = lyricsInput.value.trim();
             if (!text) {
@@ -218,7 +218,9 @@
 
         tapLineBtn.addEventListener('click', () => {
             let t = audioElement.currentTime;
-            lineTimestamps.push(t);
+            // মানুষের রিঅ্যাকশন ডিলে অ্যাডজাস্ট করার জন্য ০.৩ সেকেন্ড মাইনাস করা হলো
+            let adjustedTime = Math.max(0, t - 0.3);
+            lineTimestamps.push(adjustedTime);
             currentSyncIndex++;
 
             if (currentSyncIndex < lines.length) {
